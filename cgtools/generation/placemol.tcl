@@ -251,6 +251,11 @@ proc ::cgtools::generation::place_part { mol partlist } {
 
 # Place particles that belong to a protein
 proc ::cgtools::generation::place_protein { mol partlist } {
+  variable count_proteins
+
+  incr count_proteins
+  puts "COUNT PROTEINS $count_proteins"
+
     set moltype [lindex $mol 0]
     set typeinfo [::cgtools::utils::matchtype $moltype]
     
@@ -276,7 +281,10 @@ proc ::cgtools::generation::place_protein { mol partlist } {
 	set posx [lindex $curpos 0]
 	set posy [lindex $curpos 1]
 	set posz [lindex $curpos 2]
-	part $partnum pos $posx $posy $posz type $parttype mass $partmass fix 1 1 1
+	
+    part $partnum pos $posx $posy $posz type $parttype mass $partmass fix 1 1 1 mol $count_proteins
+ 
+
     }
 
     #bonds
