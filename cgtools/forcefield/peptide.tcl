@@ -528,8 +528,8 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
         if { $lambdaWCA > 0.0 } {
           set wca_eps   $inter_eps ;# Will need to incorporate lambda coupling
           set wca_sig   $inter_sig
-          set wca_cut   [expr sqrt(2**(1/3.)*$wca_sig**2 \
-                                  -(1-$lambdaWCA)*$delta)]
+          set wca_cut   [expr sqrt(pow(2,1/3.)*pow($wca_sig,2) \
+                               -(1-$lambdaWCA)*$delta)]
           set wca_shift [expr 0.25*(1-$lambdaLJ)]
           set wca_off   0.0
           set wca_cap   0.0
@@ -561,7 +561,7 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
         if { $lambdaWCA > 0.0 } {
           set wca_eps   $inter_eps
           set wca_sig   $inter_sig
-          set wca_cut   [expr sqrt(2**(1/3.)*$wca_sig**2 \
+          set wca_cut   [expr sqrt(pow(2,1/3.)*pow($wca_sig,2) \
                                   -(1-$lambdaWCA)*$delta)]
           set wca_shift 0.25
           set wca_off   0.0

@@ -1,14 +1,11 @@
 namespace eval peptideb {
-
-
-
     # --- List of parameters ------------------------ #
     
     # We always need pi. 
     variable pi 3.14159265358979323846
     
     proc deg2rad {angleD} {
-	return [expr $angleD / 180. * $::cgtools::peptideb::pi]
+	return [expr $angleD / 180. * $::cgtools::forcefield::peptideb::pi]
     }
     proc sum {a b} {
 	return [expr $a + $b]

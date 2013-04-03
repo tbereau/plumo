@@ -339,6 +339,6 @@ proc ::cgtools::generation::place_protein { mol partlist } {
     }
 
     # Now turn on Hbond interaction (after bonded partners are defined)
-    source configs/hbond_inter.tcl
+    ::cgtools::forcefield::source_hbond_ff
 
 }

@@ -7,11 +7,11 @@
 package require ::cgtools::utils
 package require ::cgtools::generation
 package require ::cgtools::analysis
-package require cgtools::espresso
+package require ::cgtools::espresso
 
 package provide cgtools 1.0.0
 
-namespace eval cgtools {
+namespace eval ::cgtools {
 
 }
 

@@ -54,7 +54,7 @@ proc ::cgtools::analysis::fep::setup_fep { lambda_i lambda_j args } {
   namespace eval :: {
     set ::peptideb::nb_interactions ""
     set ::peptideb::lambda_coupling $lmbd_i
-    source [file join [file dirname [info script]] ../topologies/peptide.tcl]
+    source [file join [file dirname [info script]] ../forcefield/peptide.tcl]
     set_nb_interactions $::peptideb::nb_interactions
   }
   integrate 0

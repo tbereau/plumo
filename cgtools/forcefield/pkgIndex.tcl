@@ -8,4 +8,4 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded ::cgtools::espresso 1.0.0 [list source [file join $dir espresso.tcl]]
+package ifneeded ::cgtools::forcefield 1.0.0 [list source [file join $dir forcefield.tcl]]

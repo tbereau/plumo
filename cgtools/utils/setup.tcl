@@ -234,11 +234,11 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
         set iloop 0
 	while { $bondsetsuc } {
 	    puts "$bondtype $errmsg"
-	   mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
-	   ::cgtools::utils::sleep 5000
-           set bondsetsuc [catch {eval [concat inter $bondtype] } ]
-           set iloop [expr $iloop + 1]
-           if {$iloop > 10} break
+        mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
+        ::cgtools::utils::sleep 5000
+        set bondsetsuc [catch {eval [concat inter $bondtype] } ]
+        set iloop [expr $iloop + 1]
+        if {$iloop > 10} break
 	} 
 	#mmsg::send [namespace current] "set interaction: $bondtype "
     }
