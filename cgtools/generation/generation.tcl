@@ -88,11 +88,13 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
 
   foreach spec $system_specs {
+    variable ::cgtools::moltypelists
     #puts "::cgtools::generation::generate_system::spec = $spec"
     # Flags for tracking input settings
     set geometryset 0
     set n_molslistset 0
     set n_molslist 0
+    set sequenceset 0
     set notopo 0
     foreach item $spec {
       switch [lindex $item 0] {
@@ -104,6 +106,10 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
         "n_molslist" {
           set n_molslist [lindex $item 1]
           set n_molslistset 1
+        }
+        "sequence" {
+          set sequence [lindex $item 1]
+          set sequenceset 1
         }
         "default" {
           ::mmsg::warn [namespace current] "unknown item [lindex $item 0] in system spec. allowed values are: \n geometry \n n_molslist  "
@@ -117,6 +123,15 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     }
     if { !$n_molslistset } {
       mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
+    }
+    if { [lindex [lindex $n_molslist 0] 0] == "1" } {
+      if { !$sequenceset } {
+        mmsg::err [namespace current] "Missing sequence for peptide"
+      } else {
+        # Generate peptide topology
+        lappend moltypelists [gen_peptide_topol $sequence]
+        ::cgtools::utils::initmoltypeskey $moltypelists
+      }
     }
 
     # Generate a topology from a list of the number and size of
@@ -199,6 +214,54 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   puts [part 1397]
   return $topology
 
+}
+
+proc ::cgtools::generation::gen_peptide_topol { sequence } {
+  variable ::cgtools::forcefield::partlist_per_res3letter
+  variable ::cgtools::forcefield::resparttypelist
+  variable ::cgtools::forcefield::respartcharmmbeadlist
+
+  set beadlist {}
+  foreach resname $sequence {
+    foreach partinfo_this_resi $partlist_per_res3letter {
+         set this_resi_name [lindex $partinfo_this_resi 0]
+         #puts "this_resi_name: $this_resi_name"
+         #puts "resname: $resname"
+         if { $resname == $this_resi_name } {
+           set beadlist_this_resi [lindex $partinfo_this_resi 1]
+           foreach thispartnum $beadlist_this_resi {
+        lappend beadlist $thispartnum
+               }
+         }
+    }
+  }
+  #puts "beadlist: $beadlist"
+  unset partlist_per_res3letter
+  # Don't specify topology here
+  set bondlist [list ]
+  set angllist [list ]
+  set dihelist [list ]
+  lappend respartlist $beadlist
+  lappend respartlist $bondlist
+  lappend respartlist $angllist
+  lappend respartlist $dihelist
+  lappend respartlist $sequence
+  unset beadlist
+  unset bondlist
+  unset angllist
+  unset dihelist
+
+  #moltypeid
+  lappend molpeptidepartlist "1" 
+  #molspec
+  lappend molpeptidepartlist "PROT" 
+  #
+  lappend molpeptidepartlist $respartlist 
+  lappend molpeptidepartlist $resparttypelist 
+  lappend molpeptidepartlist $respartcharmmbeadlist 
+  #puts "molpeptidepartlist: $molpeptidepartlist"
+  #exit
+  return $molpeptidepartlist
 }
 
 proc ::cgtools::generation::get_trappedmols {  } {

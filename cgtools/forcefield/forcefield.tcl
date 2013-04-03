@@ -5,32 +5,50 @@ package require ::mmsg 1.0.0
 package provide ::cgtools::forcefield 1.0.0
 
 namespace eval ::cgtools::forcefield {
-    proc source_peptide_ff { } {
-        # Peptide parameters
-        source [file join [file dirname [info script]] peptide_parameters.tcl]
-        source [file join [file dirname [info script]] peptide_sc_parameters.tcl]
-        source [file join [file dirname [info script]] peptide.tcl]   
+    proc source_all_ff { } {
+        # lipid
+        source_popc_ff
+        # peptide
+        source_peptide_ff
     }
 
-    proc update_peptide_ff { lambda_i "1.0" } {
+
+    proc source_peptide_ff { } {
+        variable ::cgtools::forcefield::partlist_per_res3letter
+        variable ::cgtools::forcefield::resparttypelist
+        variable ::cgtools::forcefield::respartcharmmbeadlist
+        variable ::cgtools::moltypelists
+        variable ::cgtools::bonded_parms
+        variable ::cgtools::nb_interactions
+
+        # Peptide parameters
+        source $::cgtools::cgtoolsdir/forcefield/peptide_parameters.tcl
+        source $::cgtools::cgtoolsdir/forcefield/peptide_sc_parameters.tcl
+        source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
+    }
+
+    proc update_peptide_ff { {lambda_i "1.0"} } {
         # Source the peptide forcefield.
         # Optional argument: lambda_i for FEP calculation.
-        namespace eval :: {
-            set peptideb::nb_interactions ""
-            set peptideb::lambda_coupling $lambda_i
-            source [file join [file dirname [info script]] peptide.tcl]
-            set_nb_interactions $peptideb::nb_interactions
-        }
+        set ::cgtools::nb_interactions ""
+        set peptideb::lambda_coupling $lambda_i
+        source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
+        ::cgtools::utils::set_nb_interactions $::cgtools::nb_interactions
+        integrate 0
     }
 
     proc source_hbond_ff { } {
-        source [file join [file dirname [info script]] hbond_inter.tcl]
+        # Is called by ::cgtools::generation::placemol
+        source $::cgtools::cgtoolsdir/forcefield/hbond_inter.tcl
     }
 
     proc source_popc_ff { } {
+        variable bonded_parms
+        variable ::cgtools::moltypelists
+        variable ::cgtools::bonded_parms
+        variable ::cgtools::nb_interactions
         # Lipid force field
-        source [file join [file dirname [info script]] popc.tcl]
+        source $::cgtools::cgtoolsdir/forcefield/popc.tcl
     }
 
 }
-

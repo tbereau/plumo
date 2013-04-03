@@ -53,13 +53,13 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     # the ntabs option should not be necessary .. remove in a later
     # version
     set options {
-	{paramsfile.arg  ""    "parameter file"}
-	{tabdir.arg      ""    "forcetable directory"}
-	{tabnames.arg    ""    "list of forcetable names"}
-	{coffdir.arg     ""    "potcoff directory"}
-	{coffnames.arg   ""    "list of potcoff names"}
-	{readpdbdir.arg  ""    "readpdb directory"}
-	{readpdbname.arg ""    "list of readpdb file name"}
+        {paramsfile.arg  ""    "parameter file"}
+        {tabdir.arg      ""    "forcetable directory"}
+        {tabnames.arg    ""    "list of forcetable names"}
+        {coffdir.arg     ""    "potcoff directory"}
+        {coffnames.arg   ""    "list of potcoff names"}
+        {readpdbdir.arg  ""    "readpdb directory"}
+        {readpdbname.arg ""    "list of readpdb file name"}
     }
     set usage "Usage: setup_outputdir \[paramsfile:tabdir:tabnames:coffdir:coffnames:readpdbdir:readpdbname] outputdir "
     # Strip off optional arguments and store in params
@@ -75,22 +75,22 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     
     set ntabs [llength $params(tabnames)]
     for { set i 0 } { $i < $ntabs } { incr i } {
-	set tablename [lindex $params(tabnames) $i ]
+        set tablename [lindex $params(tabnames) $i ]
         # Copy forcetables to current directory
-	#set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
-	#if { $errcode } {
-	#    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
-	#} else {
-	#    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
-	#}
+        #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
+        #if { $errcode } {
+        #    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
+        #} else {
+        #    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
+        #}
 
         # Copy forcetables to output directory
-	set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
-	if { $errcode } {
-	    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
-	} else {
-	    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
-	}
+        set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
+        if { $errcode } {
+            ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
+        } else {
+            ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
+        }
     }
 
     # If <outputdir/$params(coffdir)> doesn't exist then create it
@@ -122,10 +122,10 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     
     #Copy the readfile to the outputdir and current dir
     foreach file $params(readpdbname) {
-	    if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
-	        ::mmsg::warn [namespace current] $errmsg
-	}
-	#catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
+        if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
+            ::mmsg::warn [namespace current] $errmsg
+        }
+        #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
     }
 
     # Construct a directory for checkpoint backups inside outputdir
@@ -145,14 +145,14 @@ proc ::cgtools::utils::read_startfile { file } {
     set mark .gz
     set fname $file
     if { [ regexp $mark $fname ] } {
-	set f [open "|gzip -cd $file" "r"]
+        set f [open "|gzip -cd $file" "r"]
     } else {
-	set f [open "$file" "r"]
+        set f [open "$file" "r"]
     }
 
     while { [ blockfile $f read auto ] != "eof" } {
-	::mmsg::send [namespace current]  "." nonewline
-	flush stdout
+        ::mmsg::send [namespace current]  "." nonewline
+        flush stdout
     }
     
     close $f
@@ -167,8 +167,8 @@ proc ::cgtools::utils::read_startfile { file } {
 proc ::cgtools::utils::readcheckpoint { checkpointdir } {
     set result [ catch { set f [ open "$checkpointdir/checkpoint.latest.out" "r" ]  } ]
     if { $result } {
-	::mmsg::warn [namespace current]  "no checkpoint named $checkpointdir/checkpoint.latest.out"
-	return 0
+        ::mmsg::warn [namespace current]  "no checkpoint named $checkpointdir/checkpoint.latest.out"
+        return 0
     }
     #::mmsg::send [namespace current] "reading Checkpoint $checkpointdir/checkpoint.latest.out"
     checkpoint_read "$checkpointdir/checkpoint.latest.chk"
@@ -182,19 +182,19 @@ proc ::cgtools::utils::readcheckpoint { checkpointdir } {
 }
 
 proc ::cgtools::utils::uniqkey { } {
-     set key   [ expr { pow(2,31) + [ clock clicks ] } ]
-     set key   [ string range $key end-8 end-3 ]
-     set key   [ clock seconds ]$key
-     return $key
- }
+    set key   [ expr { pow(2,31) + [ clock clicks ] } ]
+    set key   [ string range $key end-8 end-3 ]
+    set key   [ clock seconds ]$key
+    return $key
+}
 
 proc ::cgtools::utils::sleep { ms } {
-     set uniq [ uniqkey ]
-     set ::__sleep__tmp__$uniq 0
-     after $ms set ::__sleep__tmp__$uniq 1
-     vwait ::__sleep__tmp__$uniq
-     unset ::__sleep__tmp__$uniq
- }
+    set uniq [ uniqkey ]
+    set ::__sleep__tmp__$uniq 0
+    after $ms set ::__sleep__tmp__$uniq 1
+    vwait ::__sleep__tmp__$uniq
+    unset ::__sleep__tmp__$uniq
+}
 
 # ::cgtools::utils::read_topology --
 #
@@ -232,15 +232,15 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
     foreach bondtype $bonded_parms {
         set bondsetsuc [catch {eval [concat inter $bondtype]} errmsg ]
         set iloop 0
-	while { $bondsetsuc } {
-	    puts "$bondtype $errmsg"
-        mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
-        ::cgtools::utils::sleep 5000
-        set bondsetsuc [catch {eval [concat inter $bondtype] } ]
-        set iloop [expr $iloop + 1]
-        if {$iloop > 10} break
-	} 
-	#mmsg::send [namespace current] "set interaction: $bondtype "
+        while { $bondsetsuc } {
+            puts "$bondtype $errmsg"
+            mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
+            ::cgtools::utils::sleep 5000
+            set bondsetsuc [catch {eval [concat inter $bondtype] } ]
+            set iloop [expr $iloop + 1]
+            if {$iloop > 10} break
+        } 
+        mmsg::send [namespace current] "set interaction: $bondtype "
     }
     return
 
@@ -263,14 +263,14 @@ proc ::cgtools::utils::set_nb_interactions { interactionlist } {
     foreach intertype $interactionlist {
         set nobondsetsuc [catch { eval [concat inter  $intertype ] } ] 
         set iloop 0
-	while { $nobondsetsuc } {
-	    mmsg::err [namespace current] "could not set interaction: $intertype, try again"
+        while { $nobondsetsuc } {
+            mmsg::err [namespace current] "could not set interaction: $intertype, try again"
             ::cgtools::utils::sleep 5000
             set nobondsetsuc [catch { eval [concat inter  $intertype ] } ]
             set iloop [expr $iloop + 1]
             if {$iloop > 10} break
-	}
-	#mmsg::send [namespace current] "set interaction: $intertype "
+        }
+        mmsg::send [namespace current] "set interaction: $intertype "
     }
     return
 
@@ -295,13 +295,13 @@ proc ::cgtools::utils::init_random { n_procs } {
     ::mmsg::send [namespace current]  "Setting the random seed to clock in seconds: $c "
     set seedbase $c
     for { set i 1 } { $i < $n_procs } { incr i } {
-	lappend seedbase [expr $c + 2304*$i]
+        lappend seedbase [expr $c + 2304*$i]
     }
     eval t_random seed $seedbase
     
     flush stdout
 }
-    
+
 # ::cgtools::utils::initialize_vmd --
 #
 # Depending on the value of <flag> initialize vmd to one of two possible states:
@@ -324,7 +324,7 @@ proc ::cgtools::utils::init_random { n_procs } {
 proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
     # ---- Process Arguments ---------------------------# 
     set options {
-	{extracommands.arg       ""     "additional stuff to be written to vmd_animation script"}
+        {extracommands.arg       ""     "additional stuff to be written to vmd_animation script"}
     }
     set usage "Usage: initialize_vmd flag $outputdir $ident $topology $args \[extracommands]"
     # Strip off optional arguments and store in params
@@ -338,76 +338,76 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
     ::mmsg::send [namespace current]  "initializing vmd to : " nonewline
     
     switch -regexp $flag  {
-	"interactive" {
-	    ::mmsg::send [namespace current]  "interactive" 
-	    writepsf_xplor "$filename.psf" $topology
-	    #writepsf "$filename.psf"
-	    writecrd_charmm "$filename.crd" $topology
-	    writepdb_charmm "$filename.pdb" $topology
-	    #writepdb "$filename.pdb"
-	    for {set port 10000} { $port < 65000 } { incr port } {
-		catch {imd connect $port} res
-		if {$res == ""} break
-	    }
-	    set HOSTNAME [exec hostname]
-	    set vmdout_file [open "vmd_start.script" "w"]
-	    puts $vmdout_file "mol load psf $filename.psf pdb $filename.pdb"
-	    puts $vmdout_file "rotate stop"
-	    puts $vmdout_file "mol modstyle 0 0 Licorice"
-	    # 1.800000 0.300000 8.000000 6.000000"
-	    puts $vmdout_file "mol modcolor 0 0 Name"
-	    puts $vmdout_file "imd connect $HOSTNAME $port"
-	    puts $vmdout_file "imd transfer 1"
-	    puts $vmdout_file "imd keep 1"
-	    close $vmdout_file
-	    if { $start == 0 } {
-		::mmsg::send [namespace current]  "Start VMD in the same directory on the machine you with :"
-		::mmsg::send [namespace current]  "vmd -e vmd_start.script &"
-		imd listen $wait
-	    } else {
-		exec vmd -e vmd_start.script &
-	    }
-	}
-	"offline" {
-	    ::mmsg::send [namespace current]  "offline"
-	    variable firstconfignum
-	    
-	    writepsf_xplor "$outputdir/$ident.vmd.psf" $topology
-	    #writepsf "$outputdir/$ident.vmd.psf"
-	    
-	    set vmd_file [open "$outputdir/vmd_animation.script" "w"]
-	    puts $vmd_file "loadseries $ident.vmd 1 $firstconfignum"
-	    puts $vmd_file "rotate stop"
-	    puts $vmd_file "mol modstyle 0 0 Licorice"
-	    puts $vmd_file "mol modcolor 0 0 Name"
-	    puts $vmd_file "logfile vmd.log"
-	    puts $vmd_file "logfile off"
-	    foreach command $params(extracommands) {
-		puts $vmd_file $command
-	    }
-	    close $vmd_file
-	    
-	    # And for the warmup too
-	    writepsf_xplor "$outputdir/warm.vmd.psf"  $topology
-	    #writepsf "$outputdir/warm.vmd.psf" 
-	    set vmd_file [open "$outputdir/warm_animation.script" "w"]
-	    puts $vmd_file "loadseries warm.vmd 1 0"
-	    puts $vmd_file "rotate stop"
-	    puts $vmd_file "mol modstyle 0 0 Licorice"
-	    puts $vmd_file "mol modcolor 0 0 Name"
-	    puts $vmd_file "logfile vmd.log"
-	    puts $vmd_file "logfile off"
-	    foreach command $params(extracommands) {
-		puts $vmd_file $command
-	    }
-	    close $vmd_file
-	}
+        "interactive" {
+            ::mmsg::send [namespace current]  "interactive" 
+            writepsf_xplor "$filename.psf" $topology
+            #writepsf "$filename.psf"
+            writecrd_charmm "$filename.crd" $topology
+            writepdb_charmm "$filename.pdb" $topology
+            #writepdb "$filename.pdb"
+            for {set port 10000} { $port < 65000 } { incr port } {
+                catch {imd connect $port} res
+                if {$res == ""} break
+            }
+            set HOSTNAME [exec hostname]
+            set vmdout_file [open "vmd_start.script" "w"]
+            puts $vmdout_file "mol load psf $filename.psf pdb $filename.pdb"
+            puts $vmdout_file "rotate stop"
+            puts $vmdout_file "mol modstyle 0 0 Licorice"
+            # 1.800000 0.300000 8.000000 6.000000"
+            puts $vmdout_file "mol modcolor 0 0 Name"
+            puts $vmdout_file "imd connect $HOSTNAME $port"
+            puts $vmdout_file "imd transfer 1"
+            puts $vmdout_file "imd keep 1"
+            close $vmdout_file
+            if { $start == 0 } {
+                ::mmsg::send [namespace current]  "Start VMD in the same directory on the machine you with :"
+                ::mmsg::send [namespace current]  "vmd -e vmd_start.script &"
+                imd listen $wait
+            } else {
+                exec vmd -e vmd_start.script &
+            }
+        }
+        "offline" {
+            ::mmsg::send [namespace current]  "offline"
+            variable firstconfignum
+            
+            writepsf_xplor "$outputdir/$ident.vmd.psf" $topology
+            #writepsf "$outputdir/$ident.vmd.psf"
+            
+            set vmd_file [open "$outputdir/vmd_animation.script" "w"]
+            puts $vmd_file "loadseries $ident.vmd 1 $firstconfignum"
+            puts $vmd_file "rotate stop"
+            puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modcolor 0 0 Name"
+            puts $vmd_file "logfile vmd.log"
+            puts $vmd_file "logfile off"
+            foreach command $params(extracommands) {
+                puts $vmd_file $command
+            }
+            close $vmd_file
+            
+            # And for the warmup too
+            writepsf_xplor "$outputdir/warm.vmd.psf"  $topology
+            #writepsf "$outputdir/warm.vmd.psf" 
+            set vmd_file [open "$outputdir/warm_animation.script" "w"]
+            puts $vmd_file "loadseries warm.vmd 1 0"
+            puts $vmd_file "rotate stop"
+            puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modcolor 0 0 Name"
+            puts $vmd_file "logfile vmd.log"
+            puts $vmd_file "logfile off"
+            foreach command $params(extracommands) {
+                puts $vmd_file $command
+            }
+            close $vmd_file
+        }
 
 
-	"default" { 
-	    ::mmsg::send [namespace current]  "default"
-	    #Do nothing 
-	}
+        "default" { 
+            ::mmsg::send [namespace current]  "default"
+            #Do nothing 
+        }
     }
 }
 
@@ -421,24 +421,24 @@ proc ::cgtools::utils::set_std_topology { n_parts beads_per_lipid } {
     set n_lipids_monolayer [expr $n_parts/($beads_per_lipid*2.0)]
 
     for {set i 0} { $i < $n_lipids_monolayer } {incr i} {
-	set mol1 0
-	set mol2 1
-	for { set b 0 } { $b < $beads_per_lipid } {incr b } {
-	    set partnum [expr $i*$beads_per_lipid*2 + $b ]
-	    lappend mol1 $partnum
-	}
-	for { set b $beads_per_lipid } { $b < [expr $beads_per_lipid*2] } { incr b } {
-	    set partnum [expr $i*$beads_per_lipid*2 + $b ]
-	    lappend mol2 $partnum
-	}
-	lappend topo $mol1
-	lappend topo $mol2
+        set mol1 0
+        set mol2 1
+        for { set b 0 } { $b < $beads_per_lipid } {incr b } {
+            set partnum [expr $i*$beads_per_lipid*2 + $b ]
+            lappend mol1 $partnum
+        }
+        for { set b $beads_per_lipid } { $b < [expr $beads_per_lipid*2] } { incr b } {
+            set partnum [expr $i*$beads_per_lipid*2 + $b ]
+            lappend mol2 $partnum
+        }
+        lappend topo $mol1
+        lappend topo $mol2
     }
     eval analyze set $topo
     analyze set "topo_part_sync"
 }
 
-    
+
 # No longer used ?
 proc ::cgtools::utils::prepare_vmd_series { outdir name topology } {
 
@@ -476,15 +476,15 @@ proc ::cgtools::utils::cleanup_tabfiles { tablenames tabledir outputdir } {
 
     # Copy forcetables to output/tabdir directory
     for { set i 0 } { $i < [llength $tablenames] } {incr i} {
-	set errcode [catch { exec cp [lindex $tablenames $i] $outputdir/$tabledir/ } ]
-	if { $errcode } {
-	    ::mmsg::err [namespace current]  "Error copying table to $outputdir/$tabledir : $errcode"
-	}
+        set errcode [catch { exec cp [lindex $tablenames $i] $outputdir/$tabledir/ } ]
+        if { $errcode } {
+            ::mmsg::err [namespace current]  "Error copying table to $outputdir/$tabledir : $errcode"
+        }
     }
     #clean up files
     for { set i 0 } { $i < [llength $tablenames] } {incr i} {
-	catch { exec rm [lindex $tablenames $i] }
-	catch { exec rm $outputdir/[lindex $tablenames $i] }
+        catch { exec rm [lindex $tablenames $i] }
+        catch { exec rm $outputdir/[lindex $tablenames $i] }
     }
 }
 
@@ -508,5 +508,5 @@ proc ::cgtools::utils::cleanup_cofffiles { coffnames coffdir outputdir } {
 }
 
 proc ::cgtools::utils::cleanup_readpdbfiles { readpdbname } {
-        catch { exec rm $readpdbname }
+    catch { exec rm $readpdbname }
 }

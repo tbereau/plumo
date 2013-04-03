@@ -43,6 +43,7 @@ namespace eval ::cgtools::espresso {
         global kkkkkk
         global checkpointexists
         global errorInfo errorCode 
+        variable ::cgtools::bonded_parms
 
 
         set this [namespace current]
@@ -81,7 +82,7 @@ namespace eval ::cgtools::espresso {
 
             # Specify the bonded interactions
             #puts "bonded_parms $cgtools::bonded_parms"
-            ::cgtools::utils::set_bonded_interactions $cgtools::forcefield::bonded_parms
+            ::cgtools::utils::set_bonded_interactions $cgtools::bonded_parms
 
             # Specify any other non-bonded interactions
             if { [ catch { ::cgtools::utils::set_nb_interactions $cgtools::nb_interactions } ] } {

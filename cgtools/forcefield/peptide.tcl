@@ -84,7 +84,7 @@ set beadtypelist [list \
   {37 CB 181.0 0 TYR} \
   {38 CB 121.0 0 CYS} \
   {39 CB 204.0 0 TRP} \
-  {40 CB 75.0 0 CAP}]
+  {40 CB  75.0 0 CAP}]
 ##Notice, bond,angle,dihedral,hydrogen bonds are all set in cgtools/generation/placemol.tcl "proc ::cgtools::generation::place_protein"
 set bondtypelist [list ]
 set angltypelist [list ]
@@ -204,7 +204,7 @@ lappend bonded_parms [list 119 dihedral 1 $peptideb::k_dih_omega $peptideb::pi]
 lappend bonded_parms [list 113 subt_lj 0 $peptideb::max_length]
 
 # Virtual bond: deleted
-## lappend bonded_parms [list 120 virtual_bond]
+lappend bonded_parms [list 120 virtual_bond]
 
 # Nonbonded interactions
 # Type    Atom
@@ -534,12 +534,14 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
           set wca_off   0.0
           set wca_cap   0.0
           set wca_soft  ""
-          if { $peptideb::softcore_flag != 0 } {
-            set wca_soft "$lambdaWCA $delta"
-          }
-          lappend nb_interactions [list $type $cb_type lj-gen \
+          set wca_command "$type $cb_type lj-gen \
             $wca_eps $wca_sig $wca_cut $wca_shift $wca_off $wca_cap \
-            12 6 1.0 1.0 $wca_soft]
+            12 6 1.0 1.0"
+          if { $peptideb::softcore_flag != 0 } {
+            set wca_soft " $lambdaWCA $delta"
+            append wca_command $wca_soft
+          }
+          lappend nb_interactions [list $wca_command]
 
           # 2) attractive LJ-like. Vary only between 0.5 < lambda < 1.
           #    Interaction is turned off at lambda <= 0.5.

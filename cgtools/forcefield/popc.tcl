@@ -62,6 +62,7 @@ lappend molpopclist $popccharmmbeadlist
 unset popclist
 unset popctypelist
 unset popccharmmbeadlist
+lappend moltypelists $molpopclist
 ::mmsg::send [namespace current] "molpopclist is set"
 
 
@@ -91,7 +92,6 @@ for { set p 0 } { $p < $nbond } { incr p } {
 		set bn1 [lindex $bondname 2]
 		set overlapnamenow overlap_bond.$bn0$bn1\.coff
 		lappend overlapnames $overlapnamenow 
-		puts [namespace current]
 		lappend bonded_parms [list $bondid overlapped bond $::cgtools::overlapdir/$overlapnamenow]
 	}
 	if {$bondfeature == 4} {

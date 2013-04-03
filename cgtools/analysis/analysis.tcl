@@ -16,7 +16,7 @@ namespace eval ::cgtools::analysis {
     variable haveimportedchildren 0
     variable mgrid
     variable stray_cut_off
-#    variable switches
+    #    variable switches
     variable this [namespace current]
     variable known_flags " possible flags are: \n boxl \n temperature "
 
@@ -38,6 +38,7 @@ source [file join [file dirname [info script]] pressure.tcl]
 source [file join [file dirname [info script]] energy.tcl]
 source [file join [file dirname [info script]] diffusion.tcl]
 source [file join [file dirname [info script]] distance_partbilayer.tcl]
+source [file join [file dirname [info script]] fep.tcl]
 
 
 # ::cgtools::analysis::print_averages --
@@ -54,11 +55,11 @@ proc ::cgtools::analysis::print_averages { } {
     # Now run the setup commands for each of the required analysis commands
     set printavprefix "printav_"
     foreach command $docommands {
-	set command [lindex [split $command " "] 0]
-	# Construct the name of the printav command
-	set printavcommand "$printavprefix$command"
-	::mmsg::debug [namespace current] "executing $printavcommand"
-	eval $printavcommand
+        set command [lindex [split $command " "] 0]
+        # Construct the name of the printav command
+        set printavcommand "$printavprefix$command"
+        ::mmsg::debug [namespace current] "executing $printavcommand"
+        eval $printavcommand
     }
 
     reset_averages
@@ -82,11 +83,11 @@ proc ::cgtools::analysis::reset_averages { } {
     # Now run the setup commands for each of the required analysis commands
     set resetavprefix "resetav_"
     foreach command $docommands {
-	set command [lindex [split $command " "] 0]
-	# Construct the name of the resetav command
-	set resetavcommand "$resetavprefix$command"
-	::mmsg::debug [namespace current] "executing $resetavcommand"
-	eval $resetavcommand
+        set command [lindex [split $command " "] 0]
+        # Construct the name of the resetav command
+        set resetavcommand "$resetavprefix$command"
+        ::mmsg::debug [namespace current] "executing $resetavcommand"
+        eval $resetavcommand
     }
 }
 
@@ -107,11 +108,11 @@ proc ::cgtools::analysis::do_analysis { } {
     # Now run the setup commands for each of the required analysis commands
     set analyzeprefix "analyze_"
     foreach command $docommands {
-	set command [lindex [split $command " "] 0]
-	# Construct the name of the analyze command
-	set analyzecommand "$analyzeprefix$command"
-	::mmsg::debug [namespace current] "executing $analyzecommand"
-	eval $analyzecommand
+        set command [lindex [split $command " "] 0]
+        # Construct the name of the analyze command
+        set analyzecommand "$analyzeprefix$command"
+        ::mmsg::debug [namespace current] "executing $analyzecommand"
+        eval $analyzecommand
     }
 
     #analyze set "topo_part_sync"
@@ -148,11 +149,11 @@ proc ::cgtools::analysis::setup_analysis { commands args } {
     ::mmsg::send [namespace current] "setting up analysis"
 
     set options {
-	{outputdir.arg      "./"    "name of output directory " }
-	{suffix.arg "tmp" "suffix to be used for outputfiles" }
-	{iotype.arg "a" "the method with which to open existing analysis files"}
-	{g.arg 8 "the grid size for fft dependent calculations"}
-	{str.arg 4.0 "stray cut off distance"}
+        {outputdir.arg      "./"    "name of output directory " }
+        {suffix.arg "tmp" "suffix to be used for outputfiles" }
+        {iotype.arg "a" "the method with which to open existing analysis files"}
+        {g.arg 8 "the grid size for fft dependent calculations"}
+        {str.arg 4.0 "stray cut off distance"}
     }
     set usage "Usage: setup_analysis:outputdir:suffix:iotype:g:str "
     array set params [::cmdline::getoptions args $options $usage]
@@ -166,7 +167,7 @@ proc ::cgtools::analysis::setup_analysis { commands args } {
     set topo [analyze set]
     set n_particles 0
     foreach mol $topo {
-	set n_particles [expr $n_particles + [llength $mol] -1]
+        set n_particles [expr $n_particles + [llength $mol] -1]
     }
 
     set outputdir $params(outputdir)
@@ -176,21 +177,21 @@ proc ::cgtools::analysis::setup_analysis { commands args } {
 
     # Import commands from all child namespaces 
     if (!$haveimportedchildren) {
-	set children "[namespace children [namespace current]]"
-	foreach child $children {
-	    set child [namespace tail $child]
-	    set setupstr "::*"
-	    namespace import "$child$setupstr"
-	}
+        set children "[namespace children [namespace current]]"
+        foreach child $children {
+            set child [namespace tail $child]
+            set setupstr "::*"
+            namespace import "$child$setupstr"
+        }
     }
 
     # Now run the setup commands for each of the required analysis commands
     set setupprefix "setup_"
     foreach command $commands {
-	# Construct the name of the setup command
-	set setupcommand "$setupprefix$command"
-	::mmsg::debug [namespace current] "executing $setupcommand"
-	eval $setupcommand
+        # Construct the name of the setup command
+        set setupcommand "$setupprefix$command"
+        ::mmsg::debug [namespace current] "executing $setupcommand"
+        eval $setupcommand
     }
 
 }

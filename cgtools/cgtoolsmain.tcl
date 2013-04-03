@@ -27,7 +27,7 @@ set result [package require ::mmsg]
 ::mmsg::send $this "loaded version [package require cmdline] of cmdline"
 ::mmsg::send $this "loaded version [package require ::cgtools::analysis] of analysis"
 ::mmsg::send $this "loaded version [package require ::cgtools::generation] of generation"
-::mmsg::send $this "loaded version [package require ::cgtools::utils] of espresso"
+::mmsg::send $this "loaded version [package require ::cgtools::utils] of utils"
 ::mmsg::send $this "loaded version [package require ::cgtools::espresso] of espresso"
 ::mmsg::send $this "loaded version [package require ::cgtools::forcefield] of forcefield"
 ::mmsg::send $this "loaded version [package require ::mmsg] of mmsg."
@@ -55,6 +55,8 @@ if { $argc<1} {
 }
 
 namespace eval ::cgtools {
+    variable moltypelists 
+
     set this [namespace current]
     ::mmsg::setnamespaces $this
 
@@ -80,10 +82,26 @@ namespace eval ::cgtools {
     set trappedmols ""
     set vmdcommands ""
     set userfixedparts ""
+    set moltypelists ""
+
+    # Get directory of cgtools
+    set cgtoolsdir ""
+    foreach dir $auto_path {
+        if { [string first cgtools $dir] > -1 } {
+            set cgtoolsdir $dir
+            if { [string first "~" $cgtoolsdir] == 0 } {
+                set cgtoolsdir "$::env(HOME)"
+                append cgtoolsdir [string range $dir 1 end]
+            }
+        }
+    }
+    if { $cgtoolsdir == "" } {
+        ::mmsg::err "Can't find cgtools directory in \$auto_path variable."
+    }
 
     # Directories now stored in cgtools
-    set tabledir "./forcefield/forcetables"
-    set overlapdir "./forcefield/overlapcoffs"
+    set tabledir "$cgtoolsdir/forcefield/forcetables"
+    set overlapdir "$cgtoolsdir/forcefield/overlapcoffs"
 
     # Read the parameter file. 
     set paramsfile [lindex $argv 0]
@@ -168,6 +186,9 @@ namespace eval ::cgtools {
 
     # Enable debug messages
     #::mmsg::enable debug
+
+    # Read forcefield
+    ::cgtools::forcefield::source_all_ff
 
     # ----------------- Start the script ----------------------- #
     if { $replica == 1 } {
