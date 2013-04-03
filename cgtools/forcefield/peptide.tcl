@@ -4,6 +4,7 @@
 # Tristan Bereau
 # Spring 2013
 
+
 # Check that all interactions are compiled in
 require_feature LENNARD_JONES
 require_feature LENNARD_JONES_GENERIC
@@ -141,7 +142,7 @@ lappend respartcharmmbeadlist $charmmbeadlist
 unset charmmbeadlist
 
 # Source interaction parameters if needed
-if { ![info exists $peptideb::bond_NCa] } {
+if { [llength [inter]] == 0 } {
   source [file join [file dirname [info script]] peptide_parameters.tcl    ]
   source [file join [file dirname [info script]] peptide_sc_parameters.tcl ]
 
@@ -535,13 +536,13 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
           set wca_cap   0.0
           set wca_soft  ""
           set wca_command "$type $cb_type lj-gen \
-            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off $wca_cap \
+            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
             12 6 1.0 1.0"
           if { $peptideb::softcore_flag != 0 } {
             set wca_soft " $lambdaWCA $delta"
             append wca_command $wca_soft
           }
-          lappend nb_interactions [list $wca_command]
+          lappend nb_interactions $wca_command
 
           # 2) attractive LJ-like. Vary only between 0.5 < lambda < 1.
           #    Interaction is turned off at lambda <= 0.5.
@@ -569,12 +570,15 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
           set wca_off   0.0
           set wca_cap   0.0
           set wca_soft  ""
+          set wca_command "$type $cb_type lj-gen \
+            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
+            12 6 1.0 1.0"
           if { $peptideb::softcore_flag != 0 } {
-            set wca_soft "$lambdaWCA $delta"
+            set wca_soft " $lambdaWCA $delta"
+            append wca_command $wca_soft
+
           }
-          lappend nb_interactions [list $type $cb_type lj-gen \
-            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off $wca_cap \
-            12 6 1.0 1.0 $wca_soft]
+          lappend nb_interactions $wca_command
         }
       } elseif { $inter_type == "no" } {
         # No interaction
@@ -585,9 +589,5 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
     }
   }
 }
-
-
-
-
 
 

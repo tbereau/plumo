@@ -233,8 +233,7 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
         set bondsetsuc [catch {eval [concat inter $bondtype]} errmsg ]
         set iloop 0
         while { $bondsetsuc } {
-            puts "$bondtype $errmsg"
-            mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
+            mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]]:\n$errmsg"
             ::cgtools::utils::sleep 5000
             set bondsetsuc [catch {eval [concat inter $bondtype] } ]
             set iloop [expr $iloop + 1]
@@ -261,10 +260,10 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
 #
 proc ::cgtools::utils::set_nb_interactions { interactionlist } {
     foreach intertype $interactionlist {
-        set nobondsetsuc [catch { eval [concat inter  $intertype ] } ] 
+        set nobondsetsuc [catch { eval [concat inter  $intertype ] } errmsg ] 
         set iloop 0
         while { $nobondsetsuc } {
-            mmsg::err [namespace current] "could not set interaction: $intertype, try again"
+            mmsg::err [namespace current] "could not set interaction: $intertype:\n$errmsg"
             ::cgtools::utils::sleep 5000
             set nobondsetsuc [catch { eval [concat inter  $intertype ] } ]
             set iloop [expr $iloop + 1]

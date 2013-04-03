@@ -28,12 +28,16 @@ namespace eval ::cgtools::forcefield {
     }
 
     proc update_peptide_ff { {lambda_i "1.0"} } {
+        variable ::cgtools::nb_interactions
+        variable ::cgtools::forcefield::peptideb::softcore_flag
+        variable ::cgtools::forcefield::peptideb::lambda_coupling
         # Source the peptide forcefield.
         # Optional argument: lambda_i for FEP calculation.
-        set ::cgtools::nb_interactions ""
-        set peptideb::lambda_coupling $lambda_i
+        set nb_interactions ""
+        set lambda_coupling $lambda_i
         source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
-        ::cgtools::utils::set_nb_interactions $::cgtools::nb_interactions
+        source_hbond_ff
+        ::cgtools::utils::set_nb_interactions $nb_interactions
         integrate 0
     }
 
