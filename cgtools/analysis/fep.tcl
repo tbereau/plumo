@@ -78,7 +78,7 @@ proc ::cgtools::analysis::fep::analyze_fep { } {
   namespace eval :: {
     set ::peptideb::nb_interactions ""
     set ::peptideb::lambda_coupling $lmbd_j
-    source [file join [file dirname [info script]] ../topologies/peptide.tcl]
+    source [file join [file dirname [info script]] ../forcefield/peptide.tcl]
     set_nb_interactions $::peptideb::nb_interactions
   }
   integrate 0
@@ -87,7 +87,7 @@ proc ::cgtools::analysis::fep::analyze_fep { } {
   namespace eval :: {
     set ::peptideb::nb_interactions ""
     set ::peptideb::lambda_coupling $lmbd_i
-    source [file join [file dirname [info script]] ../topologies/peptide.tcl]
+    source [file join [file dirname [info script]] ../forcefield/peptide.tcl]
     set_nb_interactions $::peptideb::nb_interactions
   }
   integrate 0
