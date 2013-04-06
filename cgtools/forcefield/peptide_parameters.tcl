@@ -154,8 +154,8 @@ namespace eval peptideb {
     # hydrophobic interactions
 
     # Thermodynamic integration / HREMD coupling variable
-    variable softcore_flag    0;
-    variable lambda_coupling  1.0;
-    variable softcore_delta  15.0;
+    variable softcore_flag   0;
+    variable lambda_coupling 1.0;
+    variable softcore_delta  1.0;
 }
 

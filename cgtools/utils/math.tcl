@@ -26,6 +26,8 @@ namespace eval cgtools::utils {
     namespace export add_matrixs
     namespace export scale_matrix
     namespace export init_matrix
+    namespace export max
+    namespace export min
 }
 
 
@@ -486,4 +488,20 @@ proc ::cgtools::utils::init_matrix {n1 n2} {
         lappend A $vec_now
     }
     return $A
+}
+
+proc ::cgtools::utils::max {a b} {
+    if { $a > $b } {
+        return $a
+    } else {
+        return $b
+    }
+}
+
+proc ::cgtools::utils::min {a b} {
+    if { $a > $b } {
+        return $a
+    } else {
+        return $b
+    }
 }
