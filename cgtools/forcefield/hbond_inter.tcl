@@ -9,5 +9,5 @@
 # } else {
 		::mmsg::send [namespace current] "Registering lj-angle interaction"
     inter 8 11 lj-angle $peptideb::ljangle_eps \
-				 $peptideb::hbond_NC $peptideb::ljangle_cut 1 -1 2 -2
+				 $peptideb::hbond_NC $peptideb::ljangle_cut 1 -1 2 -2 1.0
 # }

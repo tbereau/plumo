@@ -63,6 +63,8 @@ proc ::cgtools::analysis::fep::setup_fep { lambda_i lambda_j {eqtime 0} {delta "
   }
   # Set force field -- simulate at lambda_i
   ::cgtools::forcefield::update_peptide_ff $lmbd_i
+  puts "$lambda_coupling"
+  exit
 }
 
 proc ::cgtools::analysis::fep::analyze_fep { } {

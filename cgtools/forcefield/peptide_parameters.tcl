@@ -131,6 +131,7 @@ namespace eval peptideb {
 
     variable ljangle_cut 8.
     variable HB_max_cap 200.    
+    variable HB_max_cap_rad 
 
     # HBond in bilayer (off by default)
     if {![info exists HB_bilayer_z0]} {
