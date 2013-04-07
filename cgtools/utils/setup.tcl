@@ -239,7 +239,7 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
             set iloop [expr $iloop + 1]
             if {$iloop > 10} break
         } 
-        mmsg::send [namespace current] "set interaction: $bondtype "
+        # mmsg::send [namespace current] "set interaction: $bondtype "
     }
     return
 
@@ -269,7 +269,7 @@ proc ::cgtools::utils::set_nb_interactions { interactionlist } {
             set iloop [expr $iloop + 1]
             if {$iloop > 10} break
         }
-        mmsg::send [namespace current] "set interaction: $intertype "
+        # mmsg::send [namespace current] "set interaction: $intertype "
     }
     return
 

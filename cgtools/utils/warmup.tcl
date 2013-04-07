@@ -52,8 +52,6 @@ proc ::cgtools::utils::warmup { steps times topology args } {
     # Set the initial forcecap
     set cap $params(startcap)
 
-    # Cap HBond interaction all the time
-
     for { set i 0 } { $i < $times } { incr i } {
         # Check the mindist criterion if necessary
         if { $params(mindist) } {
@@ -130,9 +128,6 @@ proc ::cgtools::utils::nptwarmup { steps times iparms fparms topology args } {
         ::mmsg::warn [namespace current] "npt warmup steps are zero"
         return
     }
-    
-    # Cap HBond interaction all the time
-    catch {inter ljangleforcecap $peptideb::HB_max_cap}
 
     for { set p 0 } { $p < [llength  $iparms] } { incr p } {
         if {[lindex $iparms $p] == 0} {
@@ -261,8 +256,8 @@ proc ::cgtools::utils::mcwarmup { steps times topology args } {
 
         # Set the new forcecap into espresso and integrate
         # catch tabulated force cap error in case tabulated option is not turned on
-        catch {inter forcecap $cap}
-        catch {inter ljforcecap $cap}
+        # New: tabforcecap and ljforcecap deprecated.
+        inter forcecap $cap
         integrate $steps
         set cap [expr $cap + $capincr ]
         ::mmsg::send [namespace current]  "run $i of $times at time=[setmd time] (cap=$cap) " 
@@ -273,6 +268,8 @@ proc ::cgtools::utils::mcwarmup { steps times topology args } {
     
     # Turn off all forcecapping
     ::mmsg::send [namespace current] "uncapping forces"
-    catch {inter forcecap 0}
-    catch {inter ljforcecap 0}
+    inter forcecap 0
+    # Now turn force capping for HBond and source once more the Hbond interation.
+    inter forcecap "individual"
+    ::cgtools::forcefield::source_hbond_ff
 }

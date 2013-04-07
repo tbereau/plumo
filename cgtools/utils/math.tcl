@@ -499,7 +499,7 @@ proc ::cgtools::utils::max {a b} {
 }
 
 proc ::cgtools::utils::min {a b} {
-    if { $a > $b } {
+    if { $a < $b } {
         return $a
     } else {
         return $b

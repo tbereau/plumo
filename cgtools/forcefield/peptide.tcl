@@ -526,60 +526,56 @@ for { set cb_type 20 } { $cb_type < 40 } { incr cb_type } {
         # Separate potential in two parts: repulsive (WCA-like) and attractive (LJ)
 
         # 1) repulsive WCA-like. Vary only if lambda < 0.5
-        if { $lambdaWCA > 0.0 } {
-          set wca_eps   $inter_eps ;# Will need to incorporate lambda coupling
-          set wca_sig   $inter_sig
-          set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                               -(1-$lambdaWCA)*$delta)]
-          set wca_shift [expr 0.25*(1-$lambdaLJ)]
-          set wca_off   0.0
-          set wca_cap   0.0
-          set wca_soft  ""
-          set wca_command "$type $cb_type lj-gen \
-            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
-            12 6 1.0 1.0"
-          if { $peptideb::softcore_flag != 0 } {
-            set wca_soft " $lambdaWCA $delta"
-            append wca_command $wca_soft
-          }
-          lappend nb_interactions $wca_command
+        set wca_eps   $inter_eps ;# Will need to incorporate lambda coupling
+        set wca_sig   $inter_sig
+        set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
+                             -(1-$lambdaWCA)*$delta)]
+        set wca_shift [expr 0.25*(1-$lambdaLJ)]
+        set wca_off   0.0
+        set wca_cap   0.0
+        set wca_soft  ""
+        set wca_command "$type $cb_type lj-gen \
+          $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
+          12 6 1.0 1.0"
+        if { $peptideb::softcore_flag != 0 } {
+          set wca_soft " $lambdaWCA $delta"
+          append wca_command $wca_soft
+        }
+        lappend nb_interactions $wca_command
 
-          # 2) attractive LJ-like. Vary only between 0.5 < lambda < 1.
-          #    Interaction is turned off at lambda <= 0.5.
-          #    Lambda coupling only enters in the epsilon parameter.
-          if { $lambdaLJ > 0.0 } {
-            set lj_eps   [expr $lambdaLJ * $inter_eps]
-            set lj_sig   $inter_sig
-            set lj_cut   $lj_cutoff
-            set lj_shift [calc_lj_shift $lj_sig $lj_cut]
-            set lj_off   0.0
-            set lj_cap   0.0
-            set lj_min   $wca_cut
-            lappend nb_interactions [list $type $cb_type lennard-jones \
-              $lj_eps $lj_sig $lj_cut $lj_shift $lj_off $lj_cap $lj_min]
-          }
+        # 2) attractive LJ-like. Vary only between 0.5 < lambda < 1.
+        #    Interaction is turned off at lambda <= 0.5.
+        #    Lambda coupling only enters in the epsilon parameter.
+        if { $lambdaLJ > 0.0 } {
+          set lj_eps   [expr $lambdaLJ * $inter_eps]
+          set lj_sig   $inter_sig
+          set lj_cut   $lj_cutoff
+          set lj_shift [calc_lj_shift $lj_sig $lj_cut]
+          set lj_off   0.0
+          set lj_cap   0.0
+          set lj_min   $wca_cut
+          lappend nb_interactions [list $type $cb_type lennard-jones \
+            $lj_eps $lj_sig $lj_cut $lj_shift $lj_off $lj_cap $lj_min]
         }
 
       } elseif { $inter_type == "wca" } {
-        if { $lambdaWCA > 0.0 } {
-          set wca_eps   $inter_eps
-          set wca_sig   $inter_sig
-          set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                                  -(1-$lambdaWCA)*$delta)]
-          set wca_shift 0.25
-          set wca_off   0.0
-          set wca_cap   0.0
-          set wca_soft  ""
-          set wca_command "$type $cb_type lj-gen \
-            $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
-            12 6 1.0 1.0"
-          if { $peptideb::softcore_flag != 0 } {
-            set wca_soft " $lambdaWCA $delta"
-            append wca_command $wca_soft
+        set wca_eps   $inter_eps
+        set wca_sig   $inter_sig
+        set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
+                                -(1-$lambdaWCA)*$delta)]
+        set wca_shift 0.25
+        set wca_off   0.0
+        set wca_cap   0.0
+        set wca_soft  ""
+        set wca_command "$type $cb_type lj-gen \
+          $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
+          12 6 1.0 1.0"
+        if { $peptideb::softcore_flag != 0 } {
+          set wca_soft " $lambdaWCA $delta"
+          append wca_command $wca_soft
 
-          }
-          lappend nb_interactions $wca_command
         }
+        lappend nb_interactions $wca_command
       } elseif { $inter_type == "no" } {
         # No interaction
       } else {

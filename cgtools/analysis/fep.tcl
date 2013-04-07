@@ -63,8 +63,6 @@ proc ::cgtools::analysis::fep::setup_fep { lambda_i lambda_j {eqtime 0} {delta "
   }
   # Set force field -- simulate at lambda_i
   ::cgtools::forcefield::update_peptide_ff $lmbd_i
-  puts "$lambda_coupling"
-  exit
 }
 
 proc ::cgtools::analysis::fep::analyze_fep { } {
@@ -84,10 +82,17 @@ proc ::cgtools::analysis::fep::analyze_fep { } {
   set currenttime [setmd time]
   if { $currenttime >= $fepequitime } {
     set epot_i [expr [analyze energy total] - [analyze energy kinetic]]
+    puts "$epot_i"
+    puts [inter]
     # Now change of force field with other lambda coupling
     ::cgtools::forcefield::update_peptide_ff $lmbd_j
 
     set epot_j [expr [analyze energy total] - [analyze energy kinetic]]
+    puts "$epot_i $epot_j $lmbd_i $lmbd_j"
+    foreach int [inter] {
+      puts $int
+    }
+    exit
     # Now revert back to original force field with lambda_i
     ::cgtools::forcefield::update_peptide_ff $lmbd_i
     
