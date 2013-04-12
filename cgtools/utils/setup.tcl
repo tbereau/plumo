@@ -263,6 +263,7 @@ proc ::cgtools::utils::set_nb_interactions { interactionlist } {
         set nobondsetsuc [catch { eval [concat inter  $intertype ] } errmsg ] 
         set iloop 0
         while { $nobondsetsuc } {
+            puts "$errmsg"
             mmsg::err [namespace current] "could not set interaction: $intertype:\n$errmsg"
             ::cgtools::utils::sleep 5000
             set nobondsetsuc [catch { eval [concat inter  $intertype ] } ]
