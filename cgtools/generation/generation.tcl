@@ -208,10 +208,6 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
   #puts "topology= $topology"
   set topology [sort_topo $topology]
-
-  #puts "topology= $topology"
-  puts [part 1256]
-  puts [part 1397]
   return $topology
 
 }

@@ -45,6 +45,7 @@ set usage "Usage:
 \tEspresso cgtoolsmain.tcl <CONFIG_NAME> 
      * Possible options :
 \t-replica \[-connect HOST\] \t\t starts a replica exchange simulation
+\t-hremd \[-connect HOST\] \t\t Hamiltonian Replica Exchange MD
 \t-hybrid \t\t starts a MC-MD hybrid simulation
 \t-annealing \t\t starts a annealing simulation
 \t-new \t\t start a new simulation rather than starting from the last checkpoint (depending on CONFIG_FILE information)\n"
@@ -63,6 +64,10 @@ namespace eval ::cgtools {
     # Set default replica exchange contoller
     set replica 0
     set replica_connect 0
+
+    # Set default HREMD exchange controller
+    set hremd 0
+    set hremd_connect 0
 
     # Set default system parameters.
     set thermo Langevin
@@ -148,6 +153,13 @@ namespace eval ::cgtools {
                     set replica_connect [lindex $argv [expr $k+2]]
                     incr k 2
                 }
+            } "-hremd" {
+                set hremd 1
+                ::mmsg::send $this "Hamiltonian replica exchange MD turned on"
+                if {[lindex $argv [expr $k+1]] == "-connect" } {
+                    set hremd_connect [lindex $argv [expr $k+2]]
+                    incr k 2
+                }
             } "-new" {
                 set newcomp 1
                 ::mmsg::send $this "Start a new simulation, i.e., will NOT be resumed at the last checkpoint."
@@ -190,21 +202,21 @@ namespace eval ::cgtools {
     # Read forcefield
     ::cgtools::forcefield::source_all_ff
 
+    # Erase all the directory we're not resuming
+    if { [info exists newcomp] } {
+        foreach file [glob -nocomplain -directory $ident $ident.vmd*] {
+            catch {exec rm -rf $ident}
+        }
+    }
+
     # ----------------- Start the script ----------------------- #
     if { $replica == 1 } {
         # Replica exchange is turned on
 
-        # Erase all the directory we're not resuming
-        if { [info exists newcomp] } {
-            foreach file [glob -nocomplain -directory $ident $ident.vmd*] {
-                catch {exec rm -rf $ident}
-            }
-        }
-
         # If <ident> doesn't exist then create it
         catch { exec mkdir $ident }
 
-        ::mmsg::send $this "Starting parallel tempering at temperatures : $replica_temps"
+        ::mmsg::send $this "Starting parallel tempering at temperatures: $replica_temps"
 
         if {$replica_connect == 0} {
             parallel_tempering::main -values $replica_temps -rounds $replica_rounds \
@@ -217,15 +229,23 @@ namespace eval ::cgtools {
                 -perform cgtools::espresso::replica_perform -info comm
             #		-perform cgtools::espresso::replica_perform -info all 
         }
-    } else {
-        # by default, Replica exchange is off
-        
-        # Erase all the directory we're not resuming
-        if { [info exists newcomp] } {
-            foreach file [glob -nocomplain -directory $ident $ident.vmd*] {
-                catch {exec rm -rf $ident}	
-            }
+    } elseif { $hremd == 1 } {
+        # HREMD is turned on
+
+        # If <ident> doesn't exist then create it
+        catch { exec mkdir $ident }
+        ::mmsg::send $this "Starting HREMD simulation with coupling lambda:\n  $lambda_values"
+        if {$hremd_connect == 0} {
+            parallel_tempering::main -values $lambda_values -rounds $replica_rounds \
+                -init cgtools::espresso::hremd_init -swap cgtools::espresso::hremd_swap \
+                -perform cgtools::espresso::hremd_perform -info comm
+        } else {
+            parallel_tempering::main -connect $hremd_connect -init cgtools::espresso::hremd_init \
+                -swap cgtools::espresso::hremd_swap \
+                -perform cgtools::espresso::hremd_perform -info comm
         }
+    } else {
+        # Replica exchange / HREMD is off
 
         if { [info exists hybrid] } {
             # Start hybrid simulation 

@@ -302,3 +302,5 @@ source [file join [file dirname [info script]] replica.tcl ]
 source [file join [file dirname [info script]] hybrid.tcl ]
 source [file join [file dirname [info script]] annealing.tcl ]
 source [file join [file dirname [info script]] annealfast.tcl ]
+source [file join [file dirname [info script]] hremd.tcl]
+
