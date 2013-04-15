@@ -257,24 +257,24 @@ namespace eval ::cgtools::espresso {
 
                 incr jjjjjj
 
-                # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
-                mmsg::send $this "setting checkpoint $kkkkkk [setmd time] $jjjjjj"    
-                catch { exec rm $cgtools::outputdir/checkpoint.latest.chk }
-                #set code [catch { exec rm -f $cgtools::outputdir/checkpoint.latest.chk } string]
-                #if {$code == 1}{
-                # return -code error -errorinfo $errorInfo -errorcode $errorCode $string
-                #        mmsg::send $this "$errorInfo"    
-                #        mmsg::send $this "errorCode"    
-                #}
-                catch { exec mv $cgtools::outputdir/checkpoint.latest.out \ 
-                    $cgtools::outputdir/checkpoint.latest.out.old }
-                checkpoint_set "$cgtools::outputdir/checkpoint.latest.out"
-                # Try to copy a checkpoint to the backup checkpoint folder
-                # Usefull if the program crashes while writing a checkpoint
-                if { [ catch { exec cp $cgtools::outputdir/checkpoint.latest.out \
-                                   $cgtools::outputdir/checkpoint_bak/ } ] } {
-                    mmsg::warn $this "warning: couldn't copy backup checkpoint"
-                }
+                # # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
+                # mmsg::send $this "setting checkpoint $kkkkkk [setmd time] $jjjjjj"    
+                # catch { exec rm $cgtools::outputdir/checkpoint.latest.chk }
+                # #set code [catch { exec rm -f $cgtools::outputdir/checkpoint.latest.chk } string]
+                # #if {$code == 1}{
+                # # return -code error -errorinfo $errorInfo -errorcode $errorCode $string
+                # #        mmsg::send $this "$errorInfo"    
+                # #        mmsg::send $this "errorCode"    
+                # #}
+                # catch { exec mv $cgtools::outputdir/checkpoint.latest.out \ 
+                #     $cgtools::outputdir/checkpoint.latest.out.old }
+                # checkpoint_set "$cgtools::outputdir/checkpoint.latest.out"
+                # # Try to copy a checkpoint to the backup checkpoint folder
+                # # Usefull if the program crashes while writing a checkpoint
+                # if { [ catch { exec cp $cgtools::outputdir/checkpoint.latest.out \
+                #                    $cgtools::outputdir/checkpoint_bak/ } ] } {
+                #     mmsg::warn $this "warning: couldn't copy backup checkpoint"
+                # }
 
             }
             #end of if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 }

@@ -90,7 +90,7 @@ proc ::cgtools::analysis::fep::analyze_fep { } {
     ::cgtools::forcefield::update_peptide_ff $lmbd_i
     
     set deltaE [expr $epot_j - $epot_i]
-    set summedExp [expr $summedExp + exp($deltaE/$systemtemp)]
+    set summedExp [expr $summedExp + exp(-$deltaE/$systemtemp)]
     incr counter
 
     set pipe [open $file_fep a]
