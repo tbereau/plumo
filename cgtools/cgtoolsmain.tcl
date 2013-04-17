@@ -231,7 +231,6 @@ namespace eval ::cgtools {
         }
     } elseif { $hremd == 1 } {
         # HREMD is turned on
-
         # If <ident> doesn't exist then create it
         catch { exec mkdir $ident }
         ::mmsg::send $this "Starting HREMD simulation with coupling lambda:\n  $lambda_values"

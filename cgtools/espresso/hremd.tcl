@@ -43,6 +43,8 @@ namespace eval cgtools {
             variable initial_lambda $lambda
             variable checkpointexists
             variable folder
+            variable ::cgtools::forcefield::peptideb::softcore_flag
+            set softcore_flag 1
             
             set this [namespace current]
             mmsg::send $this "Starting HREMD instance at lambda $lambda"
@@ -315,11 +317,11 @@ namespace eval cgtools {
 
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
-                polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
-                    {time box_l npt_p_diff } \
-                    {id pos type mass v f molecule} 
-                mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
-                flush stdout
+                # polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
+                #     {time box_l npt_p_diff } \
+                #     {id pos type mass v f molecule} 
+                # mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
+                # flush stdout
 
                 if { $cgtools::use_vmd == "offline" } {
                     ::cgtools::utils::writecrd_charmm \
@@ -330,18 +332,18 @@ namespace eval cgtools {
 
                 incr jjjjjj
 
-                # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
-                set jjjjjj_$lambda [set jjjjjj]
-                set topology_$lambda [set topology]
-                mmsg::send $this "setting checkpoint_$lambda [set kkkkkk] [setmd time] [set jjjjjj]"   
-                catch { exec rm -f $folder/checkpoint.latest.chk} 
-                checkpoint_set "$folder/checkpoint.latest.out"
-                # Try to copy a checkpoint to the backup checkpoint folder
-                # Usefull if the program crashes while writing a checkpoint
-                if { [ catch { exec cp -f $folder/checkpoint.latest.out \
-                                   $folder/checkpoint_bak/checkpoint.latest.out } ] } {
-                    mmsg::warn $this "warning: couldn't copy backup checkpoint"
-                }
+                # # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
+                # set jjjjjj_$lambda [set jjjjjj]
+                # set topology_$lambda [set topology]
+                # mmsg::send $this "setting checkpoint_$lambda [set kkkkkk] [setmd time] [set jjjjjj]"   
+                # catch { exec rm -f $folder/checkpoint.latest.chk} 
+                # checkpoint_set "$folder/checkpoint.latest.out"
+                # # Try to copy a checkpoint to the backup checkpoint folder
+                # # Usefull if the program crashes while writing a checkpoint
+                # if { [ catch { exec cp -f $folder/checkpoint.latest.out \
+                #                    $folder/checkpoint_bak/checkpoint.latest.out } ] } {
+                #     mmsg::warn $this "warning: couldn't copy backup checkpoint"
+                # }
             }
             #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
 
