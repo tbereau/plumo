@@ -45,7 +45,7 @@ set usage "Usage:
 \tEspresso cgtoolsmain.tcl <CONFIG_NAME> 
      * Possible options :
 \t-replica \[-connect HOST\] \t\t starts a replica exchange simulation
-\t-hremd \[-connect HOST\] \t\t Hamiltonian Replica Exchange MD
+\t-hremd \[-connect HOST \[-port PORT\]\] \t\t Hamiltonian Replica Exchange MD
 \t-hybrid \t\t starts a MC-MD hybrid simulation
 \t-annealing \t\t starts a annealing simulation
 \t-new \t\t start a new simulation rather than starting from the last checkpoint (depending on CONFIG_FILE information)\n"
@@ -64,6 +64,7 @@ namespace eval ::cgtools {
     # Set default replica exchange contoller
     set replica 0
     set replica_connect 0
+    set tcp_port 12000
 
     # Set default HREMD exchange controller
     set hremd 0
@@ -159,6 +160,10 @@ namespace eval ::cgtools {
                 if {[lindex $argv [expr $k+1]] == "-connect" } {
                     set hremd_connect [lindex $argv [expr $k+2]]
                     incr k 2
+                    if {[lindex $argv [expr $k+1]] == "-port" } {
+                        set tcp_port [lindex $argv [expr $k+2]]
+                        incr k 2
+                    } 
                 }
             } "-new" {
                 set newcomp 1
@@ -237,11 +242,11 @@ namespace eval ::cgtools {
         if {$hremd_connect == 0} {
             parallel_tempering::main -values $lambda_values -rounds $replica_rounds \
                 -init cgtools::espresso::hremd_init -swap cgtools::espresso::hremd_swap \
-                -perform cgtools::espresso::hremd_perform -info comm
+                -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm
         } else {
             parallel_tempering::main -connect $hremd_connect -init cgtools::espresso::hremd_init \
                 -swap cgtools::espresso::hremd_swap \
-                -perform cgtools::espresso::hremd_perform -info comm
+                -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm
         }
     } else {
         # Replica exchange / HREMD is off
