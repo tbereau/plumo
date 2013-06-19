@@ -53,6 +53,7 @@ namespace eval cgtools {
 	    set file_h [join [list $folder /histogram.dat ] ""]
 
 	    # Attempt to read a checkpoint file
+            puts "folder: $folder"
             set checkpointexists [::cgtools::utils::readcheckpoint $folder ]
 
 	    ########## Start a new computation, if no checkpoint ##########
@@ -112,10 +113,6 @@ namespace eval cgtools {
     		set startk 0
 
     		# Setup the output directory by creating it and copying forcetables and overlapped potcoffs to it
-    		#::cgtools::utils::setup_outputdir  $cgtools::outputdir -paramsfile $cgtools::paramsfile \
-			-tabdir $cgtools::tabledir -tabnames $cgtools::tablenames -coffdir $cgtools::overlapdir \
-			-coffnames $cgtools::overlapnames -readpdbdir $cgtools::readpdbdir \
-			-readpdbname $cgtools::readpdbname
     		::cgtools::utils::setup_outputdir  $cgtools::outputdir -paramsfile $cgtools::paramsfile \
 			-tabdir $cgtools::tabledir -tabnames $cgtools::tablenames -coffdir $cgtools::overlapdir \
 			-coffnames $cgtools::overlapnames -readpdbdir $cgtools::readpdbdir \
@@ -192,22 +189,16 @@ namespace eval cgtools {
     		::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs 10 \
 			-outputdir $folder
 
-   		# If the membrane have any fixed particles, unfix them after warmup
-    		set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
-    		for {set i 0} { $i <  [setmd n_part] } {incr i} {
-			if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-	    			part [expr $i] fix 0 0 0
-			}
-    		}
 
     		# ----------- Integration Parameters before warmup without any fixed particles -----------#
     		setmd time_step $cgtools::main_time_step
     		thermostat langevin  $temp $cgtools::langevin_gamma
 
-    		# Warm up without any fixed particle 
-    		::mmsg::send $this "warming up again at  [setmd temp]"
-    		::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
-			-startcap 1000 -outputdir $folder
+                # Warm up without any fixed particle 
+                ::mmsg::send $this "warming up without fixed particles at  [setmd temp]"
+                ::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
+                    -cfgs $cgtools::warmup_freq -startcap .1 -outputdir $folder 
+
     
     		# Setup analysis
     		::cgtools::analysis::setup_analysis $cgtools::analysis_flags -outputdir $folder \
@@ -217,6 +208,60 @@ namespace eval cgtools {
     		# Reset the time to a starttime (usually zero) after warmup
     		setmd time $cgtools::startmdtime   
 
+
+	    	set timingstart [clock clicks -milliseconds]
+		set jjjjjj $startj
+		set kkkkkk $startk
+
+		#Main Integration                                          #
+	        #----------------------------------------------------------#
+
+    	        # ----------- Integration Parameters after warmup -----------#
+    	        setmd time_step $cgtools::main_time_step
+    	        thermostat langevin $temp $cgtools::langevin_gamma
+
+	        if { $cgtools::thermo == "DPD" } {
+		    thermostat off
+    		    set dpd_r_cut [setmd max_cut]
+		    thermostat set dpd $temp $cgtools::dpd_gamma $dpd_r_cut
+		    mmsg::send $this "DPD thermostat has been set"
+		    mmsg::send $this "Thermostat is: [thermostat]"
+	        }
+	        if { $cgtools::npt == "on" } {
+		    integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
+		    mmsg::send $this "npt integrator has been set"
+		    flush stdout
+		    #-cubic_box
+		    thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v
+	        }
+
+
+                ::cgtools::analysis::do_analysis
+                ::cgtools::analysis::print_averages
+                if { $cgtools::use_vmd == "offline" } {
+                        ::cgtools::utils::writecrd_charmm \
+                                "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].crd" \
+                                 $topology -periodbox 1 -computecomz 1
+                        ::cgtools::utils::writepdb_charmm \
+                                "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
+                                $topology -periodbox 1 -computecomz 1
+                }
+
+                incr jjjjjj
+
+	        # First fix peptide, only simulate membrane, then unfix peptide and reset time step after $cgtools::fix_time_step
+	        #----------------------------------------------------------#
+	        integrate $cgtools::fix_time_step
+	        set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
+		for {set i 0} { $i <  [setmd n_part] } {incr i} {
+		    if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
+			part [expr $i] fix 0 0 0
+		    }
+		}
+	        # reset the time step 10 times smaller than pure-lipid simulaitons
+	        setmd time_step $cgtools::sys_time_step
+
+
 	    }
  
 	    # Resume a computation, if exists checkpoint
@@ -224,7 +269,7 @@ namespace eval cgtools {
     		# A checkpoint exists so all we need to do is reset the moltypelists, topology and setup analysis again
     
     		set topology [set topology_[set temp]]
-	        #puts "$topology"
+	        puts "topology=$topology"
     		::cgtools::utils::initmoltypeskey $cgtools::moltypelists 
     		::cgtools::utils::read_topology "$folder/$cgtools::topofile" 
 
@@ -246,15 +291,32 @@ namespace eval cgtools {
     		# Make sure that we start exactly from where the checkpoint was written
     		set startj [set jjjjjj]
     		set startk [expr [set kkkkkk] + 1]
+
+	    	set timingstart [clock clicks -milliseconds]
+		set jjjjjj $startj
+		set kkkkkk $startk
+                if { $cgtools::thermo == "DPD" } {
+                    thermostat off
+                    set dpd_r_cut [setmd max_cut]
+                    thermostat set dpd $temp $cgtools::dpd_gamma $dpd_r_cut
+                    mmsg::send $this "DPD thermostat has been set"
+                    mmsg::send $this "Thermostat is: [thermostat]"
+                }
+                if { $cgtools::npt == "on" } {
+                    integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
+                    mmsg::send $this "npt integrator has been set"
+                    flush stdout
+                    #-cubic_box
+                    thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v
+                }
+
 	    }
 
-	    set timingstart [clock clicks -milliseconds]
-	    set jjjjjj $startj
-	    set kkkkkk $startk
             ### ONly necessary if each instance handles more than one configuration, 
             ### e.g. 300 temperatures in 10 parallel processers
             #global config
 	    #set config($id) "{[part]} [setmd time]"
+
 	}
 
 	#################################################################################
@@ -286,30 +348,6 @@ namespace eval cgtools {
 	    set folder "$cgtools::outputdir/temp$temp"
 	    set file_f [join [list $folder /observables.dat ] ""]
 	    set file_h [join [list $folder /histogram.dat   ] ""]
-		
-	    #Main Integration                                          #
-	    #----------------------------------------------------------#
-
-    	    # ----------- Integration Parameters after warmup -----------#
-    	    setmd time_step $cgtools::main_time_step
-    	    thermostat langevin $temp $cgtools::langevin_gamma
-
-	    if { $cgtools::thermo == "DPD" } {
-		thermostat off
-    		set dpd_r_cut [setmd max_cut]
-		thermostat set dpd $temp $cgtools::dpd_gamma $dpd_r_cut
-		mmsg::send $this "DPD thermostat has been set"
-		mmsg::send $this "Thermostat is: [thermostat]"
-	    }
-	    if { $cgtools::npt == "on" } {
-		integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
-		mmsg::send $this "npt integrator has been set"
-		flush stdout
-		#-cubic_box
-		thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v
-	    }
-
-	    mmsg::send $this "run [set kkkkkk] at time=[setmd time]"
 
 	    # Call all of the analyze routines that we specified when setting up our analysis
 	    ::cgtools::analysis::do_analysis
@@ -322,18 +360,21 @@ namespace eval cgtools {
 
 	    # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
 	    if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
-		polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
-			{time box_l npt_p_diff } \
-			{id pos type mass v f molecule} 
-		mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
-		flush stdout
+
+		#polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
+		#	{time box_l npt_p_diff } \
+		#	{id pos type mass v f molecule} 
+		#mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
+		#flush stdout
 
 		if { $cgtools::use_vmd == "offline" } {
-	    		::cgtools::utils::writecrd_charmm \
-				"$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].crd" $topology 
-    			::cgtools::utils::writepdb_charmm \
-				"$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" $topology 
-		}
+                        ::cgtools::utils::writecrd_charmm \
+                                "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].crd" \
+                                 $topology -periodbox 1 -computecomz 1
+                        ::cgtools::utils::writepdb_charmm \
+                                "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
+                                $topology -periodbox 1 -computecomz 1
+                }
 
 		incr jjjjjj
 
