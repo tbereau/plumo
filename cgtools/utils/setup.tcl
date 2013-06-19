@@ -71,65 +71,74 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     set errcode [catch { exec mkdir $outputdir }]
     
     # If <outputdir/$params(tabdir)> doesn't exist then create it
-    set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
-    
-    set ntabs [llength $params(tabnames)]
-    for { set i 0 } { $i < $ntabs } { incr i } {
-        set tablename [lindex $params(tabnames) $i ]
-        # Copy forcetables to current directory
-        #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
-        #if { $errcode } {
-        #    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
-        #} else {
-        #    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
-        #}
 
-        # Copy forcetables to output directory
-        set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
-        if { $errcode } {
-            ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
-        } else {
-            ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
+    if { ![ file isdirectory $outputdir/$params(tabdir)] } {    
+        set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
+        set ntabs [llength $params(tabnames)]
+        for { set i 0 } { $i < $ntabs } { incr i } {
+            set tablename [lindex $params(tabnames) $i ]
+            # Copy forcetables to current directory
+            #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
+            #if { $errcode } {
+            #    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
+            #} else {
+            #    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
+            #}
+
+            # Copy forcetables to output directory
+            set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
+            if { $errcode } {
+                ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
+            } else {
+                ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
+            }
         }
     }
 
     # If <outputdir/$params(coffdir)> doesn't exist then create it
-    set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
+    if { ![ file isdirectory $outputdir/$params(coffdir)] } {    
+        set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
+        set ncoffs [llength $params(coffnames)]
+        for { set i 0 } { $i < $ncoffs } { incr i } {
+            set coffname [lindex $params(coffnames) $i ]
+            # Copy coefficient files to current directory
+            #set errcode [ catch { exec cp $params(coffdir)/$coffname [pwd]/ } ]
+            #if { $errcode } {
+            #    ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to [pwd]"
+            #} else {
+            #    ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to [pwd] "
+            #}
 
-    set ncoffs [llength $params(coffnames)]
-    for { set i 0 } { $i < $ncoffs } { incr i } {
-        set coffname [lindex $params(coffnames) $i ]
-        # Copy coefficient files to current directory
-        #set errcode [ catch { exec cp $params(coffdir)/$coffname [pwd]/ } ]
-        #if { $errcode } {
-        #    ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to [pwd]"
-        #} else {
-        #    ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to [pwd] "
-        #}
-
-        # Copy coefficient files to output directory
-        set errcode [ catch { exec cp $params(coffdir)/$coffname $outputdir/$params(coffdir) } ]
-        if { $errcode } {
-            ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to $outputdir/$params(coffdir)"
-        } else {
-            ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to $outputdir/$params(coffdir) "
+            # Copy coefficient files to output directory
+            set errcode [ catch { exec cp $params(coffdir)/$coffname $outputdir/$params(coffdir) } ]
+            if { $errcode } {
+                ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to $outputdir/$params(coffdir)"
+            } else {
+                ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to $outputdir/$params(coffdir) "
+            }
         }
     }
 
     
     #Copy the paramsfile to the outputdir
-    catch { exec cp $params(paramsfile) $outputdir }
+    if { ![file exists $outputdir/$params(paramsfile)] } {
+        catch { exec cp $params(paramsfile) $outputdir }
+    }
     
     #Copy the readfile to the outputdir and current dir
     foreach file $params(readpdbname) {
-        if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
-            ::mmsg::warn [namespace current] $errmsg
+        if { ![file exists $outputdir/$file] } {
+            if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
+                ::mmsg::warn [namespace current] $errmsg
+            }
+            #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
         }
-        #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
     }
 
     # Construct a directory for checkpoint backups inside outputdir
-    catch { exec mkdir $outputdir/checkpoint_bak }    
+    if { ![ file isdirectory $outputdir/checkpoint_bak)] } {    
+        catch { exec mkdir $outputdir/checkpoint_bak }    
+    }
 }
 
 
@@ -233,13 +242,14 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
         set bondsetsuc [catch {eval [concat inter $bondtype]} errmsg ]
         set iloop 0
         while { $bondsetsuc } {
-            mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]]:\n$errmsg"
+            puts "$bondtype $errmsg"
+            mmsg::err [namespace current] "couldn't set interaction: [concat [lindex $bondtype 0]], try again"
             ::cgtools::utils::sleep 5000
             set bondsetsuc [catch {eval [concat inter $bondtype] } ]
             set iloop [expr $iloop + 1]
             if {$iloop > 10} break
         } 
-        # mmsg::send [namespace current] "set interaction: $bondtype "
+        #mmsg::send [namespace current] "set interaction: $bondtype "
     }
     return
 
@@ -260,17 +270,16 @@ proc ::cgtools::utils::set_bonded_interactions { bonded_parms } {
 #
 proc ::cgtools::utils::set_nb_interactions { interactionlist } {
     foreach intertype $interactionlist {
-        set nobondsetsuc [catch { eval [concat inter  $intertype ] } errmsg ] 
+        set nobondsetsuc [catch { eval [concat inter  $intertype ] } ] 
         set iloop 0
         while { $nobondsetsuc } {
-            puts "$errmsg"
-            mmsg::err [namespace current] "could not set interaction: $intertype:\n$errmsg"
+            mmsg::err [namespace current] "could not set interaction: $intertype, try again"
             ::cgtools::utils::sleep 5000
             set nobondsetsuc [catch { eval [concat inter  $intertype ] } ]
             set iloop [expr $iloop + 1]
             if {$iloop > 10} break
         }
-        # mmsg::send [namespace current] "set interaction: $intertype "
+        #mmsg::send [namespace current] "set interaction: $intertype "
     }
     return
 
@@ -353,7 +362,8 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmdout_file [open "vmd_start.script" "w"]
             puts $vmdout_file "mol load psf $filename.psf pdb $filename.pdb"
             puts $vmdout_file "rotate stop"
-            puts $vmdout_file "mol modstyle 0 0 Licorice"
+            #puts $vmdout_file "mol modstyle 0 0 Licorice"
+            puts $vmdout_file "mol modstyle 0 0 Line"
             # 1.800000 0.300000 8.000000 6.000000"
             puts $vmdout_file "mol modcolor 0 0 Name"
             puts $vmdout_file "imd connect $HOSTNAME $port"
@@ -378,7 +388,8 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/vmd_animation.script" "w"]
             puts $vmd_file "loadseries $ident.vmd 1 $firstconfignum"
             puts $vmd_file "rotate stop"
-            puts $vmd_file "mol modstyle 0 0 Licorice"
+            #puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modstyle 0 0 Line"
             puts $vmd_file "mol modcolor 0 0 Name"
             puts $vmd_file "logfile vmd.log"
             puts $vmd_file "logfile off"
@@ -393,7 +404,8 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/warm_animation.script" "w"]
             puts $vmd_file "loadseries warm.vmd 1 0"
             puts $vmd_file "rotate stop"
-            puts $vmd_file "mol modstyle 0 0 Licorice"
+            #puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modstyle 0 0 Line"
             puts $vmd_file "mol modcolor 0 0 Name"
             puts $vmd_file "logfile vmd.log"
             puts $vmd_file "logfile off"
@@ -448,7 +460,8 @@ proc ::cgtools::utils::prepare_vmd_series { outdir name topology } {
     set vmd_file [open "$outdir/vmd_animation.script" "w"]
     puts $vmd_file "loadseries $outdir/$name.vmd 1"
     puts $vmd_file "rotate stop"
-    puts $vmd_file "mol modstyle 0 0 Licorice"
+    #puts $vmd_file "mol modstyle 0 0 Licorice"
+    puts $vmd_file "mol modstyle 0 0 Line"
     puts $vmd_file "mol modcolor 0 0 Name"
     puts $vmd_file "logfile $outdir/vmd.log"
     puts $vmd_file "logfile off"
