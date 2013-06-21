@@ -85,108 +85,121 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
 
     foreach spec $system_specs {
-	#puts "::cgtools::generation::generate_system::spec = $spec"
-	# Flags for tracking input settings
-	set geometryset 0
-	set n_molslistset 0
-	set n_molslist 0
-	set notopo 0
-	foreach item $spec {
-	    switch [lindex $item 0] {
-		"geometry" {
-		    set geometry [lindex $item 1]
-		    set geometryreadfile [lindex $item 2]
-		    set geometryset 1
-		}
-		"n_molslist" {
-		    set n_molslist [lindex $item 1]
-		    set n_molslistset 1
-		}
-		"default" {
-		    ::mmsg::warn [namespace current] "unknown item [lindex $item 0] in system spec. allowed values are: \n geometry \n n_molslist  "
-		}
-	    }
-	}
+        #puts "::cgtools::generation::generate_system::spec = $spec"
+        # Flags for tracking input settings
+        set geometryset 0
+        set n_molslistset 0
+        set n_molslist 0
+        set notopo 0
+        foreach item $spec {
+            switch [lindex $item 0] {
+                "geometry" {
+                    set geometry [lindex $item 1]
+                    set geometryreadfile [lindex $item 2]
+                    set geometryset 1
+                }
+                "n_molslist" {
+                    set n_molslist [lindex $item 1]
+                    set n_molslistset 1
+                }
+                "sequence" {
+                    set sequence [lindex $item 1]
+                    set sequenceset 1
+                }
+                "default" {
+                    ::mmsg::warn [namespace current] "unknown item [lindex $item 0] in system spec. allowed values are: \n geometry \n n_molslist  "
+                }
+            }
+        }
 
 
-	if { !$geometryset } {
-	    mmsg::err [namespace current] "geometry not specified"
-	}
-	if { !$n_molslistset } {
-	    mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
-	}
+        if { !$geometryset } {
+            mmsg::err [namespace current] "geometry not specified"
+        }
+        if { !$n_molslistset } {
+            mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
+        }
+        if { [lindex [lindex $n_molslist 0] 0] == "1" } {
+            if { !$sequenceset } {
+                mmsg::err [namespace current] "Missing sequence for peptide"
+            } else {
+                # Generate peptide topology
+                lappend moltypelists [gen_peptide_topol $sequence]
+                ::cgtools::utils::initmoltypeskey $moltypelists
+            }
+        }
 
-	# Generate a topology from a list of the number and size of
-	# each molecule
-	foreach mtp $n_molslist {
-	    set thismoltypeid [lindex $mtp 0]
-	    set nmols [lindex $mtp 1]
-	    set tpspec [::cgtools::utils::matchtype [lindex $mtp 0]]
-	    set nbeads_mol [llength [lindex [lindex $tpspec 2] 0]]
-	    # Create the topology for this lipid type
-	    set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]		
+        # Generate a topology from a list of the number and size of
+        # each molecule
+        foreach mtp $n_molslist {
+            set thismoltypeid [lindex $mtp 0]
+            set nmols [lindex $mtp 1]
+            set tpspec [::cgtools::utils::matchtype [lindex $mtp 0]]
+            set nbeads_mol [llength [lindex [lindex $tpspec 2] 0]]
+            # Create the topology for this lipid type
+            set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]    
 
-	    # Just in case zero molecules were specified we need
-	    # to check if topo was actually created at all by the
-	    # last command
-	    if { $topo == 0 } {
-		::mmsg::err [namespace current] "no topo created for molecule type $thismoltypeid"
-	    } else {
-		lappend topolist $topo
-		set currpid [expr [::cgtools::utils::maxpartid $topo ] + 1]
-	    }
+            # Just in case zero molecules were specified we need
+            # to check if topo was actually created at all by the
+            # last command
+            if { $topo == 0 } {
+                ::mmsg::err [namespace current] "no topo created for molecule type $thismoltypeid"
+            } else {
+                lappend topolist $topo
+                set currpid [expr [::cgtools::utils::maxpartid $topo ] + 1]
+            }
 
-	}
+        }
 
-	# Join all of the previously made topologies
-	set first 1
-	foreach topo $topolist {
-	    if { $first } { 
-		set topology $topo 
-		set first 0
-	    } else {
-		set topology [join_topos $topology $topo]
-	    }
-	    
-	}
-	unset topolist
+        # Join all of the previously made topologies
+        set first 1
+        foreach topo $topolist {
+            if { $first } { 
+                set topology $topo 
+                set first 0
+            } else {
+                set topology [join_topos $topology $topo]
+            }
+            
+        }
+        unset topolist
 
-	# Now wrap the topology onto a specified geometry and perform any
-	# other geometry specific tasks
+        # Now wrap the topology onto a specified geometry and perform any
+        # other geometry specific tasks
 
-	# Shuffle the topology
-	set topology [shuffle_topo $topology ]
-	# Now run the creation command for the specified geometry
-	set createprefix "create_"
-	set namespaceprefix "::cgtools::generation::"
-	# Construct the name of the create command
-	set command $geometry
-	set geometry [lindex [split $geometry " "] 0]
-	set createcommand "$namespaceprefix$geometry\:\:$createprefix$command "
-	::mmsg::debug [namespace current] "executing $command"
-	#eval $createcommand -readfile $geometryreadfile
-	#puts "::cgtools::generation::generate_system::geometryreadfile = $geometryreadfile"
-	if { [catch  {eval $createcommand -readfile $geometryreadfile} errm ] } {
-	    mmsg::err [namespace current] "couldn't execute creation command for $command \n $errm"
-	}
+        # Shuffle the topology
+        set topology [shuffle_topo $topology ]
+        # Now run the creation command for the specified geometry
+        set createprefix "create_"
+        set namespaceprefix "::cgtools::generation::"
+        # Construct the name of the create command
+        set command $geometry
+        set geometry [lindex [split $geometry " "] 0]
+        set createcommand "$namespaceprefix$geometry\:\:$createprefix$command "
+        ::mmsg::debug [namespace current] "executing $command"
+        #eval $createcommand -readfile $geometryreadfile
+        #puts "::cgtools::generation::generate_system::geometryreadfile = $geometryreadfile"
+        if { [catch  {eval $createcommand -readfile $geometryreadfile} errm ] } {
+            mmsg::err [namespace current] "couldn't execute creation command for $command \n $errm"
+        }
 
-	if {!$notopo} {
-	    lappend topologieslist $topology
-	}
-	#puts "topology: $topology"
-	
+        if {!$notopo} {
+            lappend topologieslist $topology
+        }
+        #puts "topology: $topology"
+        
     }
 
     # Join all of the previously made topologies
     set first 1
     foreach topo $topologieslist {
-	if { $first } { 
-	    set topology $topo 
-	    set first 0
-	} else {
-	    set topology [join_topos $topology $topo]
-	}
-	
+        if { $first } { 
+            set topology $topo 
+            set first 0
+        } else {
+            set topology [join_topos $topology $topo]
+        }
+        
     }
 
     #puts "topology= $topology"
@@ -197,52 +210,101 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
 }
 
-proc ::cgtools::generation::get_trappedmols {  } {
-    variable trappedmols
-    variable topology
+proc ::cgtools::generation::gen_peptide_topol { sequence } {
+    variable ::cgtools::forcefield::partlist_per_res3letter
+    variable ::cgtools::forcefield::resparttypelist
+    variable ::cgtools::forcefield::respartcharmmbeadlist
 
-    variable trappedmolsupdated
-
-    if { [catch { set dum $trappedmols } ] } {
-	::mmsg::warn [namespace current] "no trappedmols defined"
-	return -1
-    } else {
-	if { !$trappedmolsupdated } {
-	    set didntfindmol 1
-	    for { set j 0 } { $j < [llength $trappedmols] } { incr j } {
-		# Update trappedmols
-		set fmol [lindex $trappedmols $j]
-		for { set i 0 } { $i < [llength $topology] } { incr i } {
-		    set mol [lindex $topology $i]
-		    if { [lindex $fmol 0] == [lindex $mol 1] } {
-			lset trappedmols $j 0 $i
-			set didntfindmol 0
-			break			
-		    }
-		}
-		if { $didntfindmol } {
-		    ::mmsg::err [namespace current] "could not get_trappedmols unable to find the corresponding particles"
-		}
-
-	    }
-	}
-	set trappedmolsupdated 1
-	return $trappedmols
+    set beadlist {}
+    foreach resname $sequence {
+        foreach partinfo_this_resi $partlist_per_res3letter {
+            set this_resi_name [lindex $partinfo_this_resi 0]
+            #puts "this_resi_name: $this_resi_name"
+            #puts "resname: $resname"
+            if { $resname == $this_resi_name } {
+                set beadlist_this_resi [lindex $partinfo_this_resi 1]
+                foreach thispartnum $beadlist_this_resi {
+                    lappend beadlist $thispartnum
+                }
+            }
+        }
     }
-}
-
-proc ::cgtools::generation::get_userfixedparts {  } {
-    variable userfixedparts
-
-    if { [catch { set dum $userfixedparts } ] } {
-	::mmsg::warn [namespace current] "no user fixed particles defined"
-	return -1
-    } else {
-	return $userfixedparts
+        #puts "beadlist: $beadlist"
+        unset partlist_per_res3letter
+        # Don't specify topology here
+        set bondlist [list ]
+        set angllist [list ]
+        set dihelist [list ]
+        lappend respartlist $beadlist
+        lappend respartlist $bondlist
+        lappend respartlist $angllist
+        lappend respartlist $dihelist
+        lappend respartlist $sequence
+        unset beadlist
+        unset bondlist
+        unset angllist
+        unset dihelist
+        #moltypeid
+        lappend molpeptidepartlist "1"
+        #molspec
+        lappend molpeptidepartlist "PROT"
+        #
+        lappend molpeptidepartlist $respartlist
+        lappend molpeptidepartlist $resparttypelist
+        lappend molpeptidepartlist $respartcharmmbeadlist
+        #puts "molpeptidepartlist: $molpeptidepartlist"
+        #exit
+        return $molpeptidepartlist
     }
-}
 
-proc ::cgtools::generation::get_interbead {  } {
-    variable interbead
-    return $interbead
-}
+
+    proc ::cgtools::generation::get_trappedmols {  } {
+        variable trappedmols
+        variable topology
+
+        variable trappedmolsupdated
+
+        if { [catch { set dum $trappedmols } ] } {
+            ::mmsg::warn [namespace current] "no trappedmols defined"
+            return -1
+        } else {
+            if { !$trappedmolsupdated } {
+                set didntfindmol 1
+                for { set j 0 } { $j < [llength $trappedmols] } { incr j } {
+                    # Update trappedmols
+                    set fmol [lindex $trappedmols $j]
+                    for { set i 0 } { $i < [llength $topology] } { incr i } {
+                        set mol [lindex $topology $i]
+                        if { [lindex $fmol 0] == [lindex $mol 1] } {
+                            lset trappedmols $j 0 $i
+                            set didntfindmol 0
+                            break     
+                        }
+                    }
+                    if { $didntfindmol } {
+                        ::mmsg::err [namespace current] "could not get_trappedmols unable to find the corresponding particles"
+                    }
+
+                }
+            }
+            set trappedmolsupdated 1
+            return $trappedmols
+        }
+    }
+
+    proc ::cgtools::generation::get_userfixedparts {  } {
+        variable userfixedparts
+
+        if { [catch { set dum $userfixedparts } ] } {
+            ::mmsg::warn [namespace current] "no user fixed particles defined"
+            return -1
+        } else {
+            return $userfixedparts
+        }
+    }
+
+    proc ::cgtools::generation::get_interbead {  } {
+        variable interbead
+        return $interbead
+    }
+
