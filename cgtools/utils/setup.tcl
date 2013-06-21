@@ -73,71 +73,72 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     # If <outputdir/$params(tabdir)> doesn't exist then create it
 
     if { ![ file isdirectory $outputdir/$params(tabdir)] } {    
-        set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
-        set ntabs [llength $params(tabnames)]
-        for { set i 0 } { $i < $ntabs } { incr i } {
-            set tablename [lindex $params(tabnames) $i ]
-            # Copy forcetables to current directory
-            #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
-            #if { $errcode } {
-            #    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
-            #} else {
-            #    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
-            #}
+      set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
+      set ntabs [llength $params(tabnames)]
+      for { set i 0 } { $i < $ntabs } { incr i } {
+	set tablename [lindex $params(tabnames) $i ]
+        # Copy forcetables to current directory
+        #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
+        #if { $errcode } {
+        #    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to [pwd]"
+        #} else {
+        #    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to [pwd] "
+        #}
 
-            # Copy forcetables to output directory
-            set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
-            if { $errcode } {
-                ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
-            } else {
-                ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
-            }
-        }
+        # Copy forcetables to output directory
+	set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
+	if { $errcode } {
+	    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
+	} else {
+	    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
+	}
+      }
     }
 
     # If <outputdir/$params(coffdir)> doesn't exist then create it
     if { ![ file isdirectory $outputdir/$params(coffdir)] } {    
-        set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
-        set ncoffs [llength $params(coffnames)]
-        for { set i 0 } { $i < $ncoffs } { incr i } {
-            set coffname [lindex $params(coffnames) $i ]
-            # Copy coefficient files to current directory
-            #set errcode [ catch { exec cp $params(coffdir)/$coffname [pwd]/ } ]
-            #if { $errcode } {
-            #    ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to [pwd]"
-            #} else {
-            #    ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to [pwd] "
-            #}
+      set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
+      set ncoffs [llength $params(coffnames)]
+      for { set i 0 } { $i < $ncoffs } { incr i } {
+        set coffname [lindex $params(coffnames) $i ]
+        # Copy coefficient files to current directory
+        #set errcode [ catch { exec cp $params(coffdir)/$coffname [pwd]/ } ]
+        #if { $errcode } {
+        #    ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to [pwd]"
+        #} else {
+        #    ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to [pwd] "
+        #}
 
-            # Copy coefficient files to output directory
-            set errcode [ catch { exec cp $params(coffdir)/$coffname $outputdir/$params(coffdir) } ]
-            if { $errcode } {
-                ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to $outputdir/$params(coffdir)"
-            } else {
-                ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to $outputdir/$params(coffdir) "
-            }
+        # Copy coefficient files to output directory
+        set errcode [ catch { exec cp $params(coffdir)/$coffname $outputdir/$params(coffdir) } ]
+        if { $errcode } {
+            ::mmsg::warn [namespace current]  "couldn't transfer overlapped coefficient $params(coffdir)/$coffname to $outputdir/$params(coffdir)"
+        } else {
+            ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to $outputdir/$params(coffdir) "
         }
+      }
     }
 
     
     #Copy the paramsfile to the outputdir
     if { ![file exists $outputdir/$params(paramsfile)] } {
-        catch { exec cp $params(paramsfile) $outputdir }
+      catch { exec cp $params(paramsfile) $outputdir }
     }
     
     #Copy the readfile to the outputdir and current dir
     foreach file $params(readpdbname) {
+	puts $file
         if { ![file exists $outputdir/$file] } {
-            if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
-                ::mmsg::warn [namespace current] $errmsg
-            }
-            #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
+	  if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
+	    ::mmsg::warn [namespace current] $errmsg
+	  }
+	  #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
         }
     }
 
     # Construct a directory for checkpoint backups inside outputdir
     if { ![ file isdirectory $outputdir/checkpoint_bak)] } {    
-        catch { exec mkdir $outputdir/checkpoint_bak }    
+      catch { exec mkdir $outputdir/checkpoint_bak }    
     }
 }
 

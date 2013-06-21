@@ -193,12 +193,12 @@ proc ::cgtools::utils::writepdb_charmm { file topology args} {
     	set partbondtypelists [lindex $typeinfo 3]
     	set partbondcharmmlists [lindex $typeinfo 4]
     
-        #set and write particle list
-        set beadlists [lindex $partbondlists 0]
-        set nbeads [llength $beadlists]
-        set beadtypelists [lindex $partbondtypelists 0]
+    	#set and write particle list
+    	set beadlists [lindex $partbondlists 0]
+    	set nbeads [llength $beadlists]
+    	set beadtypelists [lindex $partbondtypelists 0]
         set itype_begin [lindex [lindex $beadtypelists 0] 0]
-        set beadcharmmlists [lindex $partbondcharmmlists 0]
+    	set beadcharmmlists [lindex $partbondcharmmlists 0]
 
     
     	if {  $useperiod > 0 } {
