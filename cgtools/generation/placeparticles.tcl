@@ -9,55 +9,58 @@ namespace eval cgtools::generation {}
 # Reading positions of all particles from a pdb file 
 proc ::cgtools::generation::placeparticles_all { readfile } {
 
-    variable topology
-    
-    # readpdbfile 
-    #set linelist [::cgtools::utils::readpdb $readfile]
-    set linelist [::cgtools::utils::readcrd $readfile]
+   variable topology
+ 
+   # readpdbfile 
+   #set linelist [::cgtools::utils::readpdb $readfile]
+   set linelist [::cgtools::utils::readcrd $readfile]
 
-    set atomNumber 0
-    set molNumber 0
-    set mollists 0
-    unset mollists 
+   set atomNumber 0
+   set molNumber 0
+   set mollists 0
+   unset mollists 
 
-    foreach mol $topology {
-        set moltype [lindex $mol 0]
-        set typeinfo [::cgtools::utils::matchtype $moltype ]
+   foreach mol $topology {
+   	set moltype [lindex $mol 0]
+    	set typeinfo [::cgtools::utils::matchtype $moltype ]
 
-        set partbondlists [lindex $typeinfo 2]
-        set beadlists [lindex $partbondlists 0]
-        set nbeads_mol [llength $beadlists]
-        
-        set partbondtypelists [lindex $typeinfo 3]
-        set beadtypelists [lindex $partbondtypelists 0]
+ 	set partbondlists [lindex $typeinfo 2]
+    	set beadlists [lindex $partbondlists 0]
+	set nbeads_mol [llength $beadlists]
+    	
+	set partbondtypelists [lindex $typeinfo 3]
+    	set beadtypelists [lindex $partbondtypelists 0]
+        set itype_begin [lindex [lindex $beadtypelists 0] 0]
 
-        set partlists 0
-        unset partlists
-        for { set i 0 } { $i < $nbeads_mol } {incr i } {
-            set curline [lindex $linelist $atomNumber] 
-            set posx [lindex $curline 5] 
-            set posy [lindex $curline 6] 
-            set posz [lindex $curline 7]
+	set partlists 0
+	unset partlists
+    	for { set i 0 } { $i < $nbeads_mol } {incr i } {
+		set curline [lindex $linelist $atomNumber] 
+	        set posx [lindex $curline 5] 
+	        set posy [lindex $curline 6] 
+	        set posz [lindex $curline 7]
 
-            set beadname_read [lindex $curline 2]
+	        set beadname_read [lindex $curline 2]
 
-            regsub ES $beadname_read E beadname_read 
-            set beadname [string range $beadname_read 0 1]
+	        regsub ES $beadname_read E beadname_read 
+	        set beadname [string range $beadname_read 0 1]
 
-            set beadtype [lindex $beadlists $i]
-            set beadname_right [lindex [lindex $beadtypelists $beadtype] 1]
+		set beadtype [lindex $beadlists $i]
+	        set beadname_right [lindex [lindex $beadtypelists [expr $beadtype - $itype_begin ] ] 1]
 
-            # 		if { $beadname != $beadname_right } {
-            #        			::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber"
-            # 		}
-            set posvec [list $posx $posy $posz]
-            set curpart [list $atomNumber $posvec $beadtype $beadname $moltype $molNumber] 
-            lappend partlists $curpart 
-
-            incr atomNumber
-            
-        }
-        lappend mollists $partlists 
+ 		if { $beadname != $beadname_right } {
+				#puts "beadname: $beadname"
+				#puts "beadname_right: $beadname_right"
+        			::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber"
+ 		}
+		set posvec [list $posx $posy $posz]
+		set curpart [list $atomNumber $posvec $beadtype $beadname $moltype $molNumber] 
+		lappend partlists $curpart 
+	
+		incr atomNumber
+		
+	}
+	lappend mollists $partlists 
 
         incr molNumber 
     }
@@ -70,32 +73,33 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
 # Now it only works for one type of mol 
 proc ::cgtools::generation::placeparticles_template { readfile } {
 
-    variable topology
-    
-    # readpdbfile 
-    #set linelist [::cgtools::utils::readpdb $readfile]
-    set linelist [::cgtools::utils::readcrd $readfile]
+   variable topology
+ 
+   # readpdbfile 
+   #set linelist [::cgtools::utils::readpdb $readfile]
+   set linelist [::cgtools::utils::readcrd $readfile]
 
-    set atomNumber 0
-    set molNumber 0
-    set mollists 0
-    unset mollists 
+   set atomNumber 0
+   set molNumber 0
+   set mollists 0
+   unset mollists 
 
-    set mol [lindex $topology 0]
-    set moltype [lindex $mol 0]
-    set typeinfo [::cgtools::utils::matchtype $moltype]
-    
-    set partbondlists [lindex $typeinfo 2]
-    set beadlists [lindex $partbondlists 0]
-    set nbeads_mol [llength $beadlists]
-    
-    set partbondtypelists [lindex $typeinfo 3]
-    set beadtypelists [lindex $partbondtypelists 0]
+   set mol [lindex $topology 0]
+   set moltype [lindex $mol 0]
+   set typeinfo [::cgtools::utils::matchtype $moltype]
+   
+   set partbondlists [lindex $typeinfo 2]
+   set beadlists [lindex $partbondlists 0]
+   set nbeads_mol [llength $beadlists]
+    	
+   set partbondtypelists [lindex $typeinfo 3]
+   set beadtypelists [lindex $partbondtypelists 0]
+   set itype_begin [lindex [lindex $beadtypelists 0] 0]
 
-    set partlists 0
-    unset partlists
-    for { set i 0 } { $i < $nbeads_mol } {incr i } {
-        set curline [lindex $linelist $atomNumber] 
+   set partlists 0
+   unset partlists
+   for { set i 0 } { $i < $nbeads_mol } {incr i } {
+	set curline [lindex $linelist $atomNumber] 
         set posx [lindex $curline 5] 
         set posy [lindex $curline 6] 
         set posz [lindex $curline 7]
@@ -104,8 +108,8 @@ proc ::cgtools::generation::placeparticles_template { readfile } {
         regsub ES $beadname_read E beadname_read 
         set beadname [string range $beadname_read 0 1]
 
-        set beadtype [lindex $beadlists $i]
-        set beadname_right [lindex [lindex $beadtypelists $beadtype] 1]
+	set beadtype [lindex $beadlists $i]
+	set beadname_right [lindex [lindex $beadtypelists [expr $beadtype - $itype_begin ] ] 1]
 
         if { $beadname != $beadname_right } {
             ::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber"

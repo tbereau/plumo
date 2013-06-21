@@ -267,12 +267,11 @@ proc ::cgtools::generation::place_protein { mol partlist } {
     set nbeads [llength $beadlists]
 
     set beadtypelists [lindex $partbondtypelists 0]
-
     if { [expr [llength $mol]-1] != [llength $partlist] } {
         ::mmsg::err $this "Incompatibility between input file and\
             topology for protein (ID: [lindex $mol 0])."
     }
-
+    set resilists [lindex $partbondlists 4]
     for { set b 0 } { $b < $nbeads } {incr b } {
 
         #current positions of particles
@@ -305,54 +304,81 @@ proc ::cgtools::generation::place_protein { mol partlist } {
     ::mmsg::send $this "Assigned positions to protein (ID: [lindex $mol 0])"
 
     #bonds
+    set index_res 0 
     for { set b 0 } { $b < $nbeads } {incr b 5 } {
-        set ala_N [lindex $mol [expr $b+1]]
-        set ala_CA [lindex $mol [expr $b+2]]
-        set ala_CB [lindex $mol [expr $b+3]]
-        set ala_C [lindex $mol [expr $b+4]]
-        set ala_O [lindex $mol [expr $b+5]]
+        set resname_now [lindex $resilists $index_res]
+	#puts "resname_now: $resname_now"
+	set partnum_N [lindex $mol [expr $b+1]]
+	set partnum_CA [lindex $mol [expr $b+2]]
+	set partnum_CB [lindex $mol [expr $b+3]]
+	set partnum_C [lindex $mol [expr $b+4]]
+	set partnum_O [lindex $mol [expr $b+5]]
 
-        if { $b > 0 } {
-            # angle
-            part $ala_N bond 108 [expr $ala_N-2] $ala_CA
-            # dihedral phi
-            part $ala_N bond 111 [expr $ala_N-2] $ala_CA $ala_C
-        }
+	if { $b > 0 } {
+	    # angle _C-N-CA
+	    part $partnum_N bond 108 [expr $partnum_N-2] $partnum_CA 
+            ## set auto_exclusion --- membrane: 1, peptide: 2  --- _C-N-CA add exclusion between _C and CA
+	    part [expr $partnum_N-2] exclude $partnum_CA
+	    # dihedral phi
+	    part $partnum_N bond 111 [expr $partnum_N-2] $partnum_CA $partnum_C
+	}
 
-        # bonds
-        part $ala_N bond 100 $ala_CA
-        part $ala_CA bond 116 $ala_CB
-        part $ala_CA bond 102 $ala_C
-        part $ala_C bond 117 $ala_O
-        # bond 120: virtual bond (because auto_exclusions=1...)
-        part $ala_N bond 120 $ala_CB
-        part $ala_N bond 120 $ala_C
-        part $ala_CB bond 120 $ala_C
-        # angles
-        part $ala_CA bond 104 $ala_N $ala_CB
-        part $ala_CA bond 105 $ala_N $ala_C
-        part $ala_CA bond 106 $ala_CB $ala_C
-        part $ala_C  bond 118 $ala_CA $ala_O
-        # dihedrals
-        part $ala_CA bond 112 $ala_N $ala_C $ala_CB
 
-        if { $b < [expr $nbeads-5]} {
-            # bond
-            part $ala_C bond 103 [expr $ala_C+2]
-            # bond 120: virtual bond	    
-            part $ala_CA bond 120 [expr $ala_O+1]
-            part $ala_CB bond 120 [expr $ala_O+1]
-            part $ala_C  bond 120 [expr $ala_O+2]
-            part $ala_C  bond 120 [expr $ala_O+3]
-            # angle
-            part $ala_C bond 107 $ala_CA [expr $ala_C+2]
-            # dihedral psi
-            part $ala_CA bond 111 $ala_N $ala_C [expr $ala_C+2] 
-            # dihedral omega
-            part $ala_C bond 110 $ala_CA [expr $ala_C+2] [expr $ala_C+3]
-            # improper dihedral for O
-            part $ala_C bond 119 $ala_CA $ala_O [expr $ala_O+1]
-        }
+	# bonds
+	part $partnum_N bond 100 $partnum_CA
+        if {$resname_now == "GLY"} {
+		part $partnum_CA bond 115 $partnum_CB
+        } else {
+		part $partnum_CA bond 116 $partnum_CB
+        } 
+	part $partnum_CA bond 102 $partnum_C
+	part $partnum_C bond 117 $partnum_O
+	### bond 120: virtual bond (because auto_exclusions=1...) --- deleted and replaced with exclude
+	##part $partnum_N bond 120 $partnum_CB
+	##part $partnum_N bond 120 $partnum_C
+	##part $partnum_CB bond 120 $partnum_C
+	# angles
+	part $partnum_CA bond 104 $partnum_N $partnum_CB
+        ## set auto_exclusion --- membrane: 1, peptide: 2  --- N-CA-CB add exclusion between N and CB
+	part $partnum_N exclude $partnum_CB
+	part $partnum_CA bond 105 $partnum_N $partnum_C 
+        ## set auto_exclusion --- membrane: 1, peptide: 2  --- N-CA-C add exclusion between N and C
+	part $partnum_N exclude $partnum_C
+	part $partnum_CA bond 106 $partnum_CB $partnum_C 
+        ## set auto_exclusion --- membrane: 1, peptide: 2  --- CB-CA-C add exclusion between CB and C
+	part $partnum_CB exclude $partnum_C
+	part $partnum_C  bond 118 $partnum_CA $partnum_O 
+        ## set auto_exclusion --- membrane: 1, peptide: 2  --- CA-C=O add exclusion between CA and O 
+	part $partnum_CA exclude $partnum_O
+	# dihedrals
+	part $partnum_CA bond 112 $partnum_N $partnum_C $partnum_CB
+
+	if { $b < [expr $nbeads-5]} {
+	    # bond
+	    part $partnum_C bond 103 [expr $partnum_C+2]
+	    ### bond 120: virtual bond (because auto_exclusions=1...)--- deleted and replaced with exclude	    
+	    ##part $partnum_CA bond 120 [expr $partnum_O+1]
+	    ##part $partnum_CB bond 120 [expr $partnum_O+1]
+	    ##part $partnum_C  bond 120 [expr $partnum_O+2]
+	    ##part $partnum_C  bond 120 [expr $partnum_O+3]
+	    # angle
+	    part $partnum_C bond 107 $partnum_CA [expr $partnum_C+2] 
+            ## set auto_exclusion --- membrane: 1, peptide: 2  --- CA-C-N+ add exclusion between CA and N+ 
+	    part $partnum_CA exclude [expr $partnum_C+2]
+            ## NOT SURE IF NEEDED set auto_exclusion --- membrane: 1, peptide: 2  --- O=C-N+ no angle, but add exclusion between O and N+
+	    part $partnum_O exclude [expr $partnum_C+2]
+	    # dihedral psi CA*-N-CB-C
+	    part $partnum_CA bond 111 $partnum_N $partnum_C [expr $partnum_C+2] 
+	    # dihedral omega C*-CA-O-N
+            if {$resname_now == "PRO"} {
+	    	part $partnum_C bond 114 $partnum_CA [expr $partnum_C+2] [expr $partnum_C+3]
+            } else {
+	    	part $partnum_C bond 110 $partnum_CA [expr $partnum_C+2] [expr $partnum_C+3]
+            }
+	    # improper dihedral for C*-CA-O-N+
+	    part $partnum_C bond 119 $partnum_CA $partnum_O [expr $partnum_O+1]
+	}
+	incr index_res
     }
     ::mmsg::send $this "Assigned bonds, angles, and dihedrals to protein (ID: [lindex $mol 0])."
 

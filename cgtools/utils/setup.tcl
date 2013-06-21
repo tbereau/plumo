@@ -71,11 +71,12 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
     set errcode [catch { exec mkdir $outputdir }]
     
     # If <outputdir/$params(tabdir)> doesn't exist then create it
-    set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
-    
-    set ntabs [llength $params(tabnames)]
-    for { set i 0 } { $i < $ntabs } { incr i } {
-        set tablename [lindex $params(tabnames) $i ]
+
+    if { ![ file isdirectory $outputdir/$params(tabdir)] } {    
+      set errcode [catch { exec mkdir $outputdir/$params(tabdir) }]
+      set ntabs [llength $params(tabnames)]
+      for { set i 0 } { $i < $ntabs } { incr i } {
+	set tablename [lindex $params(tabnames) $i ]
         # Copy forcetables to current directory
         #set errcode [ catch { exec cp $params(tabdir)/$tablename [pwd]/ } ]	    
         #if { $errcode } {
@@ -85,19 +86,20 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
         #}
 
         # Copy forcetables to output directory
-        set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
-        if { $errcode } {
-            ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
-        } else {
-            ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
-        }
+	set errcode [ catch { exec cp $params(tabdir)/$tablename $outputdir/$params(tabdir)/ } ]
+	if { $errcode } {
+	    ::mmsg::warn [namespace current]  "couldn't transfer forcetable $params(tabdir)/$tablename to $outputdir/$params(tabdir)"
+	} else {
+	    ::mmsg::send [namespace current]  "copied $params(tabdir)/$tablename to $outputdir/$params(tabdir) "
+	}
+      }
     }
 
     # If <outputdir/$params(coffdir)> doesn't exist then create it
-    set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
-
-    set ncoffs [llength $params(coffnames)]
-    for { set i 0 } { $i < $ncoffs } { incr i } {
+    if { ![ file isdirectory $outputdir/$params(coffdir)] } {    
+      set errcode [catch { exec mkdir $outputdir/$params(coffdir) }]
+      set ncoffs [llength $params(coffnames)]
+      for { set i 0 } { $i < $ncoffs } { incr i } {
         set coffname [lindex $params(coffnames) $i ]
         # Copy coefficient files to current directory
         #set errcode [ catch { exec cp $params(coffdir)/$coffname [pwd]/ } ]
@@ -114,22 +116,30 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
         } else {
             ::mmsg::send [namespace current]  "copied $params(coffdir)/$coffname to $outputdir/$params(coffdir) "
         }
+      }
     }
 
     
     #Copy the paramsfile to the outputdir
-    catch { exec cp $params(paramsfile) $outputdir }
+    if { ![file exists $outputdir/$params(paramsfile)] } {
+      catch { exec cp $params(paramsfile) $outputdir }
+    }
     
     #Copy the readfile to the outputdir and current dir
     foreach file $params(readpdbname) {
-        if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
-            ::mmsg::warn [namespace current] $errmsg
+	puts $file
+        if { ![file exists $outputdir/$file] } {
+	  if { [catch { exec cp $params(readpdbdir)/$file $outputdir } errmsg] } {
+	    ::mmsg::warn [namespace current] $errmsg
+	  }
+	  #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
         }
-        #catch { exec cp $params(readpdbdir)/$params(readpdbname) [pwd]/ }
     }
 
     # Construct a directory for checkpoint backups inside outputdir
-    catch { exec mkdir $outputdir/checkpoint_bak }    
+    if { ![ file isdirectory $outputdir/checkpoint_bak)] } {    
+      catch { exec mkdir $outputdir/checkpoint_bak }    
+    }
 }
 
 

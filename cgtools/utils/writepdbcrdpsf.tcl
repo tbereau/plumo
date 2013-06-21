@@ -41,6 +41,7 @@ proc ::cgtools::utils::writecrd_charmm { file topology args} {
     puts $f [format "%5d" [setmd n_part]]
 
     set imol 1
+    set imol_prot 1
     foreach mol $topology {
   	set moltype [lindex $mol 0]
     	set typeinfo [matchtype $moltype]
@@ -52,11 +53,10 @@ proc ::cgtools::utils::writecrd_charmm { file topology args} {
     	#set and write particle list
     	set beadlists [lindex $partbondlists 0]
     	set nbeads [llength $beadlists]
+        set beadtypelists [lindex $partbondtypelists 0]
+        set itype_begin [lindex [lindex $beadtypelists 0] 0]
+        set beadcharmmlists [lindex $partbondcharmmlists 0]
     
-    	#set beadtypelists [lindex $partbondtypelists 0]
-        #set itype_begin [lindex [lindex $beadtypelists 0] 0]
-    	set beadcharmmlists [lindex $partbondcharmmlists 0]
-
     	if {  $useperiod > 0 } {
 		#mmsg::send [namespace current] "using period boundary condition"
 		set av_posmol { 0.0 0.0 0.0 }
@@ -101,7 +101,16 @@ proc ::cgtools::utils::writecrd_charmm { file topology args} {
         	set partnum [lindex $mol [ expr $b + 1] ]
         	set partnumcharmm [expr $partnum + 1]
 
-        	set partname [lindex [lindex $beadcharmmlists $b] 1]
+                set parttype [lindex $beadlists $b]
+                #set parttypeinfo [lindex $beadtypelists [expr $parttype - $itype_begin]]
+                #set parttypename [lindex $parttypeinfo 1]
+                #set partmass [lindex $parttypeinfo 2]
+                #set partcharge [lindex $parttypeinfo 3]
+                if { $molname == "PROT" } {
+                    set partname [lindex [lindex $beadcharmmlists [expr $parttype - $itype_begin]] 1]
+                } else {
+                    set partname [lindex [lindex $beadcharmmlists $b] 1]
+                }
 
 		set posvec [part $partnum print pos]
 		set posx [lindex $posvec 0]
@@ -115,12 +124,33 @@ proc ::cgtools::utils::writecrd_charmm { file topology args} {
 			set posy [expr $posy + [lindex $posmol_mov 1]]
 			set posz [expr $posz + [lindex $posmol_mov 2]]
 		}
-		set seqname "L$imol"
-		set linecrd [format "%5d %4d %4s %-4s%10.5f%10.5f%10.5f %-4s %-6d 0.00000" $partnumcharmm $imol $molname $partname $posx $posy $posz $seqname $imol]
+
+
+                if { $molname == "PROT" } {
+                    set seqname "P$imol_prot"
+                    set index_res [expr $b/5]
+                    set floor_res [expr $b/5]
+                    if { $b == [expr $index_res * 5] && $b != 0 } {
+                        incr ires
+                    }
+                    set resname [lindex [lindex $partbondlists 4] $index_res]
+                    set iseq $imol_prot
+                } else {
+                    set seqname "L$imol"
+                    set resname $molname
+                    set ires $imol
+                    set iseq $imol
+                }
+
+		set linecrd [format "%5d %4d %-4s %-4s%10.5f%10.5f%10.5f %-4s %-6d 0.00000" $partnumcharmm $ires $resname $partname $posx $posy $posz $seqname $iseq]
 		puts $f $linecrd
 
 	}
-	incr imol		
+	incr imol
+        if { $molname == "PROT" } {
+                incr imol_prot
+        }
+		
     }
     close $f
 }
@@ -153,6 +183,8 @@ proc ::cgtools::utils::writepdb_charmm { file topology args} {
     puts $f "REMARK  PDB FILE:   CHARMM-FORMAT COORDINATE OF CG LIPID (IMPLICIT SOLVENT MODEL)"
 
     set imol 1
+    set imol_prot 1
+    
     foreach mol $topology {
   	set moltype [lindex $mol 0]
     	set typeinfo [matchtype $moltype]
@@ -164,9 +196,8 @@ proc ::cgtools::utils::writepdb_charmm { file topology args} {
     	#set and write particle list
     	set beadlists [lindex $partbondlists 0]
     	set nbeads [llength $beadlists]
-    
-    	#set beadtypelists [lindex $partbondtypelists 0]
-        #set itype_begin [lindex [lindex $beadtypelists 0] 0]
+    	set beadtypelists [lindex $partbondtypelists 0]
+        set itype_begin [lindex [lindex $beadtypelists 0] 0]
     	set beadcharmmlists [lindex $partbondcharmmlists 0]
 
     	if {  $useperiod > 0 } {
@@ -207,13 +238,22 @@ proc ::cgtools::utils::writepdb_charmm { file topology args} {
 		}
    	}
 
-	set residue 1
+        set ires 1
 	for { set b 0 } { $b < $nbeads } {incr b } {
         	#current particle
         	set partnum [lindex $mol [ expr $b + 1] ]
         	set partnumcharmm [expr $partnum + 1]
 
-        	set partname [lindex [lindex $beadcharmmlists $b] 1]
+                set parttype [lindex $beadlists $b]
+                #set parttypeinfo [lindex $beadtypelists [expr $parttype - $itype_begin]]
+                #set parttypename [lindex $parttypeinfo 1]
+                #set partmass [lindex $parttypeinfo 2]
+                #set partcharge [lindex $parttypeinfo 3]
+                if { $molname == "PROT" } {
+                    set partname [lindex [lindex $beadcharmmlists [expr $parttype - $itype_begin]] 1]
+                } else {
+                    set partname [lindex [lindex $beadcharmmlists $b] 1]
+                }
 
 		set posvec [part $partnum print pos]
 		set posx [lindex $posvec 0]
@@ -227,20 +267,29 @@ proc ::cgtools::utils::writepdb_charmm { file topology args} {
 			set posy [expr $posy + [lindex $posmol_mov 1]]
 			set posz [expr $posz + [lindex $posmol_mov 2]]
 		}
-		set seqname "L$imol"
- 		if {$molname == "PROT" || $molname=="ALA A"} { 
-		    set molname "ALA A" 
-		    set imol $residue
-		    set seqname "P1"
-		    if {$partname=="O"} {set residue [expr $residue+1]}
-		}
-		if {$partname!="CAA"} {
-		    set linepdb [format "ATOM  %5d %4s %5s%4d    %8.3f%8.3f%8.3f  1.00  0.00     %4s" $partnumcharmm $partname $molname $imol $posx $posy $posz $seqname]
-		    puts $f $linepdb
-		}
+                if { $molname == "PROT" } {
+                    set seqname "P$imol_prot"
+                    set index_res [expr $b/5]
+                    set floor_res [expr $b/5]
+                    if { $b == [expr $index_res * 5] && $b != 0 } {
+                        incr ires
+                    }
+                    set resname [lindex [lindex $partbondlists 4] $index_res]
+                } else {
+                    set seqname "L$imol"
+                    set resname $molname
+                    set ires $imol
+                }
+
+		set linepdb [format "ATOM  %5d %-4s %-5s%4d    %8.3f%8.3f%8.3f  1.00  0.00     %4s" $partnumcharmm $partname $resname $ires $posx $posy $posz $seqname]
+		puts $f $linepdb
 
 	}
 	incr imol		
+        if { $molname == "PROT" } {
+                incr imol_prot
+        }
+
     }
     puts $f "TER"
     puts $f "END"
@@ -262,6 +311,7 @@ proc ::cgtools::utils::writepsf_xplor { file topology } {
     set dihelinelist 0
     unset dihelinelist
     set imol 1
+    set imol_prot 1
     foreach mol $topology {
   	set moltype [lindex $mol 0]
     	set typeinfo [matchtype $moltype]
@@ -276,6 +326,8 @@ proc ::cgtools::utils::writepsf_xplor { file topology } {
     	set beadtypelists [lindex $partbondtypelists 0]
         set itype_begin [lindex [lindex $beadtypelists 0] 0]
     	set beadcharmmlists [lindex $partbondcharmmlists 0]
+	set ires 1
+
 	for { set b 0 } { $b < $nbeads } {incr b } {
         	#current positions of particles
         	set partnum [lindex $mol [ expr $b + 1] ]
@@ -285,10 +337,27 @@ proc ::cgtools::utils::writepsf_xplor { file topology } {
         	set parttypename [lindex $parttypeinfo 1]
         	set partmass [lindex $parttypeinfo 2]
         	set partcharge [lindex $parttypeinfo 3]
-        	set partname [lindex [lindex $beadcharmmlists $b] 1]
-		set seqname "L$imol"
-		set linepart [format "%8d %-5s %-4d %4s %-4s %-4s%10.5f%14.4f           0   0.00000     -0.301140E-02" $partnumcharmm $seqname $imol $molname $partname $parttypename $partcharge $partmass ]
-		#puts "$partnumcharmm $seqname $imol $molname $partname $parttypename $partcharge $partmass"
+                if { $molname == "PROT" } {
+                    set partname [lindex [lindex $beadcharmmlists [expr $parttype - $itype_begin]] 1]
+                } else {
+                    set partname [lindex [lindex $beadcharmmlists $b] 1]
+                }
+		if { $molname == "PROT" } {
+		    set seqname "P$imol_prot"
+		    set index_res [expr $b/5] 
+		    set floor_res [expr $b/5] 
+		    if { $b == [expr $index_res * 5] && $b != 0 } {
+			incr ires
+		    }
+		    set resname [lindex [lindex $partbondlists 4] $index_res]
+		} else {
+		    set seqname "L$imol"
+		    set resname $molname
+		    set ires $imol 
+		}
+
+		set linepart [format "%8d %-5s %-4d %-4s %-4s %-4s%10.5f%14.4f           0   0.00000     -0.301140E-02" $partnumcharmm $seqname $ires $resname $partname $parttypename $partcharge $partmass ]
+		#puts "$partnumcharmm $seqname $ires $resname $partname $parttypename $partcharge $partmass"
 		lappend partlinelist $linepart
 	}
 
@@ -304,9 +373,12 @@ proc ::cgtools::utils::writepsf_xplor { file topology } {
         	# partnumbers [1:npart] to link the bond 
   	      	set partnum1 [expr [lindex $mol [ expr $part1_inmol + 1]] + 1 ]
        	 	set partnum2 [expr [lindex $mol [ expr $part2_inmol + 1]] + 1 ]
-
-		set linebond [format "%8d%8d" $partnum1 $partnum2]
-		lappend bondlinelist $linebond
+                set bondtype_inmol [lindex $curbond 0]
+		## don't explicitly show the effecitive "3-body" bond
+		if { $bondtype_inmol < 9} {
+			set linebond [format "%8d%8d" $partnum1 $partnum2]
+			lappend bondlinelist $linebond
+		}
     	}
 
 	
@@ -349,7 +421,50 @@ proc ::cgtools::utils::writepsf_xplor { file topology } {
 		set linedihe [format "%8d%8d%8d%8d" $partnum1 $partnum2 $partnum3 $partnum4]
 		lappend dihelinelist $linedihe
     	}
+
+	#set protein bonds	
+	if { $molname == "PROT" } {
+	   for { set b 0 } { $b < $nbeads } {incr b 5 } {
+
+                set partnum_N  [expr [lindex $mol [ expr $b + 1]] + 1]
+		set partnum_CA [expr [lindex $mol [ expr $b + 2]] + 1]
+		set partnum_CB [expr [lindex $mol [ expr $b + 3]] + 1]
+		set partnum_C  [expr [lindex $mol [ expr $b + 4]] + 1]
+		set partnum_O  [expr [lindex $mol [ expr $b + 5]] + 1]
+		#puts "partnum_N: $partnum_N"
+		#bonds
+		set linebond [format "%8d%8d" $partnum_N $partnum_CA]
+		lappend bondlinelist $linebond
+		set linebond [format "%8d%8d" $partnum_CA $partnum_CB]
+		lappend bondlinelist $linebond
+		set linebond [format "%8d%8d" $partnum_CA $partnum_C]
+		lappend bondlinelist $linebond
+		set linebond [format "%8d%8d" $partnum_C $partnum_O]
+		lappend bondlinelist $linebond
+                # angles
+		set linebond [format "%8d%8d%8d" $partnum_CA $partnum_N $partnum_CB]
+		lappend angllinelist $linebond
+		set linebond [format "%8d%8d%8d" $partnum_CA $partnum_N $partnum_C]
+		lappend angllinelist $linebond
+		set linebond [format "%8d%8d%8d" $partnum_CA $partnum_CB $partnum_C]
+		lappend angllinelist $linebond
+		set linebond [format "%8d%8d%8d" $partnum_C $partnum_CA $partnum_O]
+		lappend angllinelist $linebond
+
+	        if { $b < [expr $nbeads-5]} {
+                  # bond
+		  set linebond [format "%8d%8d" $partnum_C [expr $partnum_C+2]]
+                  lappend bondlinelist $linebond
+                  # angles
+		  set linebond [format "%8d%8d%8d" $partnum_C $partnum_CA [expr $partnum_C+2]]
+                }
+	   }
+	}
+
 	incr imol		
+	if { $molname == "PROT" } {
+		incr imol_prot		
+	}
     }
 
     
