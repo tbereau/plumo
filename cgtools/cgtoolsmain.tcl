@@ -67,7 +67,7 @@ namespace eval ::cgtools {
     set tcp_port 12000
 
     # Set default HREMD exchange controller
-    set hremd 0
+    variable hremd 0
     set hremd_connect 0
 
     # Set default system parameters.

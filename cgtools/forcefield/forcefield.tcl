@@ -29,6 +29,7 @@ namespace eval ::cgtools::forcefield {
 
     proc update_peptide_ff { {lambda_i "1.0"} } {
         variable ::cgtools::nb_interactions
+        variable ::cgtools::hremd
         variable ::cgtools::forcefield::peptideb::softcore_flag
         variable ::cgtools::forcefield::peptideb::lambda_coupling
         # Source the peptide forcefield.
@@ -43,6 +44,7 @@ namespace eval ::cgtools::forcefield {
 
     proc source_hbond_ff { } {
         # Is called by ::cgtools::generation::placemol
+        variable ::cgtools::hremd
         source $::cgtools::cgtoolsdir/forcefield/hbond_inter.tcl
     }
 

@@ -44,7 +44,9 @@ namespace eval cgtools {
             variable checkpointexists
             variable folder
             variable ::cgtools::forcefield::peptideb::softcore_flag
-            set softcore_flag 1
+            # No softcore. We're scaling the Hbond strength and the sigma of
+            # the peptide-lipid interactions.  Softcore only for FEP.
+            set softcore_flag 0
             
             set this [namespace current]
             mmsg::send $this "Starting HREMD instance at lambda $lambda"
