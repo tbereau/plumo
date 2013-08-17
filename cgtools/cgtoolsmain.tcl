@@ -168,7 +168,7 @@ namespace eval ::cgtools {
                 } 
                 if {[lindex $argv [expr $k+1]] == "-alt" } {
                     set hremd 2
-                    incr k 2
+                    incr k
                 }
             } "-new" {
                 set newcomp 1
