@@ -50,7 +50,8 @@ require_feature LENNARD_JONES_GENERIC
 ##    37   tyr Cb
 ##    38   cys Cb
 ##    39   trp Cb
-##    40   end Cb
+##    40   NAP Cb
+##    41   CAP Cb
 
 set beadtypelist [list \
   { 8  N  14.0 0} \
@@ -85,7 +86,8 @@ set beadtypelist [list \
   {37 CB 181.0 0 TYR} \
   {38 CB 121.0 0 CYS} \
   {39 CB 204.0 0 TRP} \
-  {40 CB  75.0 0 CAP}]
+  {40 CB  75.0 0 NAP} \
+  {41 CB  75.0 0 CAP}]
 ##Notice, bond,angle,dihedral,hydrogen bonds are all set in cgtools/generation/placemol.tcl "proc ::cgtools::generation::place_protein"
 set bondtypelist [list ]
 set angltypelist [list ]
@@ -113,7 +115,7 @@ set partlist_per_res3letter [list \
   {CYS { 8 9 38 11 12}}\
   {TRP { 8 9 39 11 12}}\
   {NAP {15 9 40 11 12}}\
-  {CAP { 8 9 40 16 12}}]
+  {CAP { 8 9 41 16 12}}]
 
 lappend resparttypelist $beadtypelist
 lappend resparttypelist $bondtypelist
@@ -137,7 +139,7 @@ set charmmbeadlist [list {8 N } {9 CA } {10 N } {11 C } {12 O } \
       {28 CB } {29 CB } {30 CB } {31 CB }\
       {32 CB } {33 CB } {34 CB } {35 CB }\
       {36 CB } {37 CB } {38 CB } {39 CB }\
-      {40 CB }]
+      {40 CB } {41 CB }]
 lappend respartcharmmbeadlist $charmmbeadlist
 unset charmmbeadlist
 
@@ -533,6 +535,10 @@ proc aa_lipid_inter { aa_num } {
       return [list { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
           { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
           { "wca" 1.0 4.0 } { "wca" 1.0 4.0 }]
+  } 41 { # end
+      return [list { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
+          { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
+          { "wca" 1.0 4.0 } { "wca" 1.0 4.0 }]
   } default {
       ::mmsg::err [namespace current] "No such residue $aa_name defined."
   }
@@ -546,7 +552,7 @@ set lj_cutoff 15.0
 
 
 # loop over all amino acids
-for { set cb_type 20 } { $cb_type < 41 } { incr cb_type } {
+for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
   # read in lipid-peptide parameters for side chain cb_type
   set interaction_aa_lipid [aa_lipid_inter $cb_type]
  
@@ -569,7 +575,7 @@ for { set cb_type 20 } { $cb_type < 41 } { incr cb_type } {
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                              -(1-$lambdaWCA)*$delta)]
         set wca_shift [expr 0.25*(1-$lambdaLJ)]
-        if { $cb_type == 40 } {
+        if { $cb_type == 40 || $cb_type == 41 } {
           # Termini; don't scale them
           set wca_cut [expr $wca_sig * pow(2,1/6.)]
           set wca_shift 0.25
@@ -580,7 +586,7 @@ for { set cb_type 20 } { $cb_type < 41 } { incr cb_type } {
         set wca_command "$type $cb_type lj-gen \
           $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
           12 6 1.0 1.0"
-        if { $peptideb::softcore_flag != 0 && $cb_type != 40 } {
+        if { $peptideb::softcore_flag != 0 && $cb_type != 40 && $cb_type != 41} {
           set wca_soft " 1.0 $lambdaWCA $delta"
           append wca_command $wca_soft
         }
@@ -608,7 +614,7 @@ for { set cb_type 20 } { $cb_type < 41 } { incr cb_type } {
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                                 -(1-$lambdaWCA)*$delta)]
         set wca_shift 0.25
-        if { $cb_type == 40 } {
+        if { $cb_type == 40 || $cb_type == 41} {
           # Termini; don't scale them
           set wca_cut [expr $wca_sig * pow(2,1/6.)]
         }
@@ -618,7 +624,7 @@ for { set cb_type 20 } { $cb_type < 41 } { incr cb_type } {
         set wca_command "$type $cb_type lj-gen \
           $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
           12 6 1.0 1.0"
-        if { $peptideb::softcore_flag != 0 && $cb_type != 40 } {
+        if { $peptideb::softcore_flag != 0 && $cb_type != 40 && $cb_type != 41} {
           set wca_soft " 1.0 $lambdaWCA $delta"
           append wca_command $wca_soft
 
