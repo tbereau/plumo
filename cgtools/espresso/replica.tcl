@@ -322,17 +322,16 @@ namespace eval cgtools {
 
 	    # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
 	    if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
-		polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
-			{time box_l npt_p_diff } \
-			{id pos type mass v f molecule} 
+		#polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
+		#	{time box_l npt_p_diff } \
+		#	{id pos type mass v f molecule} 
 		mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
 		flush stdout
 
 		if { $cgtools::use_vmd == "offline" } {
-	    		::cgtools::utils::writecrd_charmm \
-				"$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].crd" $topology 
     			::cgtools::utils::writepdb_charmm \
-				"$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" $topology 
+				"$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
+				$topology -periodbox 1
 		}
 
 		incr jjjjjj
@@ -342,7 +341,7 @@ namespace eval cgtools {
     		set topology_$temp [set topology]
 	   	mmsg::send $this "setting checkpoint_$temp [set kkkkkk] [setmd time] [set jjjjjj]"   
 		catch { exec rm -f $folder/checkpoint.latest.chk} 
-	        checkpoint_set "$folder/checkpoint.latest.out"
+	        #checkpoint_set "$folder/checkpoint.latest.out"
 	        # Try to copy a checkpoint to the backup checkpoint folder
 	        # Usefull if the program crashes while writing a checkpoint
 	        if { [ catch { exec cp -f $folder/checkpoint.latest.out \
@@ -394,9 +393,21 @@ namespace eval cgtools {
 	    #global config
 	    #foreach p [lindex $config($id) 0] { eval part $p }
 
-	    set epot [expr [analyze energy total] - [analyze energy kinetic]]
-	    return "[expr $epot/$temp1] [expr $epot/$temp2]"
+	    #set epot [expr [analyze energy total] - [analyze energy kinetic]]
 	    
+	    # Replica-Exchange Solute Tempering (Liu et al. PNAS _102_ (2005))
+	    # Sum up all energy contributions protein-protein and protein-lipid
+	    # lipid has IDs: 0-7, protein: 8-43
+	    set epot 0.0
+	    for {set beadprot 8} {$beadprot < 42} {incr beadprot} {
+	      for {set beadall 0} {$beadall < 8} {incr beadall} {
+		set epot [expr {$epot + 0.5*[analyze energy nonbonded $beadall $beadprot]}]
+	      }
+	      for {set beadall 8} {$beadall < 42} {incr beadall} {		
+		set epot [expr {$epot + [analyze energy nonbonded $beadprot $beadall]}]
+	      }
+	    }
+	    return "[expr $epot/$temp1] [expr $epot/$temp2]"
 	}
     }
 }

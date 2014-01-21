@@ -377,11 +377,6 @@ if { $peptideb::softcore_flag != 0 } {
   set lambdaWCA [::cgtools::utils::min [expr 2* $lambda     ] 1.0]
   set delta     $peptideb::softcore_delta  
 }
-set sigmaScale 1.0
-if { $cgtools::hremd == 1 } {
-  # HREMD: scale Hbond strength and sigma of peptide-lipid interactions
-  set sigmaScale $peptideb::lambda_coupling
-}
 
 ### Peptide-lipid interaction ###
 # interaction N, Ca, C' with lipid bead types
@@ -389,7 +384,7 @@ if { $cgtools::hremd == 1 } {
 # assume lipid bead has radius = 3
 for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     set wca_eps   $peptideb::lj_eps
-    set wca_sig   [expr ($peptideb::rvdw_Ca + 3.) * $sigmaScale]
+    set wca_sig   [expr ($peptideb::rvdw_Ca + 3.)]
     set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                             -(1-$lambdaWCA)*$delta)]
     set wca_shift 0.25
@@ -407,7 +402,7 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     }
     lappend nb_interactions $wca_command
     
-    set wca_sig [expr ($peptideb::rvdw_N + 3.) * $sigmaScale]
+    set wca_sig [expr ($peptideb::rvdw_N + 3.)]
     set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                             -(1-$lambdaWCA)*$delta)]
     set wca_command "$lipid_i 8 lj-gen \
@@ -421,7 +416,7 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     }
     lappend nb_interactions $wca_command
 
-    set wca_sig [expr ($peptideb::rvdw_C + 3.) * $sigmaScale]
+    set wca_sig [expr ($peptideb::rvdw_C + 3.)]
     set wca_cut [expr $wca_sig * sqrt(pow(2,1/3.) \
                             -(1-$lambdaWCA)*$delta)]
      set wca_command "$lipid_i 11 lj-gen \
@@ -571,7 +566,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
 
         # 1) repulsive WCA-like. Vary only if lambda < 0.5
         set wca_eps   $inter_eps ;# Will need to incorporate lambda coupling
-        set wca_sig   [expr $inter_sig * $sigmaScale]
+        set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                              -(1-$lambdaWCA)*$delta)]
         set wca_shift [expr 0.25*(1-$lambdaLJ)]
@@ -599,7 +594,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         if { $cb_type == 40 } {
           set lj_eps $inter_eps
         }
-        set lj_sig   [expr $inter_sig * $sigmaScale]
+        set lj_sig   [expr $inter_sig * 1.0]
         set lj_cut   $lj_cutoff
         set lj_shift [calc_lj_shift $lj_sig $lj_cut]
         set lj_off   0.0
@@ -610,7 +605,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
 
       } elseif { $inter_type == "wca" } {
         set wca_eps   $inter_eps
-        set wca_sig   [expr $inter_sig * $sigmaScale]
+        set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                                 -(1-$lambdaWCA)*$delta)]
         set wca_shift 0.25

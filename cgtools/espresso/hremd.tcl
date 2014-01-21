@@ -45,11 +45,11 @@ namespace eval cgtools {
             variable folder
             variable ::cgtools::forcefield::peptideb::softcore_flag
             variable ::cgtools::hremd
-            # No softcore. We're scaling the Hbond strength and the sigma of
-            # the peptide-lipid interactions.  Softcore only for hremd==2
+            # No softcore. We're scaling the Hbond strength only.  
             set softcore_flag 0
             if { $cgtools::hremd == 2 } {
-                set softcore_flag 1
+	      # Softcore only for hremd==2
+	      set softcore_flag 1
             }
             
             set this [namespace current]
@@ -330,10 +330,9 @@ namespace eval cgtools {
                 # flush stdout
 
                 if { $cgtools::use_vmd == "offline" } {
-                    ::cgtools::utils::writecrd_charmm \
-                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].crd" $topology 
                     ::cgtools::utils::writepdb_charmm \
-                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" $topology 
+                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
+			$topology -periodbox 1
                 }
 
                 incr jjjjjj

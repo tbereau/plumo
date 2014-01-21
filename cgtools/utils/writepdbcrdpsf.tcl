@@ -56,7 +56,7 @@ proc ::cgtools::utils::writecrd_charmm { file topology args} {
         set beadtypelists [lindex $partbondtypelists 0]
         set itype_begin [lindex [lindex $beadtypelists 0] 0]
         set beadcharmmlists [lindex $partbondcharmmlists 0]
-    
+
     	if {  $useperiod > 0 } {
 		#mmsg::send [namespace current] "using period boundary condition"
 		set av_posmol { 0.0 0.0 0.0 }

@@ -11,10 +11,18 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
 
    variable topology
  
-   # readpdbfile 
-   #set linelist [::cgtools::utils::readpdb $readfile]
-   set linelist [::cgtools::utils::readcrd $readfile]
-
+   # Look for extension of input file
+   set ext [string range $readfile [expr [string length $readfile]-4] end]
+   puts $ext 
+   if { $ext == ".crd" } {
+    set linelist [::cgtools::utils::readcrd $readfile]  
+   } elseif { $ext == ".pdb" } {
+    set linelist [::cgtools::utils::readpdb $readfile]
+   } else {
+    puts "Error: Extension $ext not recognized in $readfile. "
+    exit
+   }
+   
    set atomNumber 0
    set molNumber 0
    set mollists 0
@@ -75,9 +83,18 @@ proc ::cgtools::generation::placeparticles_template { readfile } {
 
    variable topology
  
-   # readpdbfile 
-   #set linelist [::cgtools::utils::readpdb $readfile]
-   set linelist [::cgtools::utils::readcrd $readfile]
+ 
+   # Look for extension of input file
+   set ext [string range $readfile [expr [string length $readfile]-4] end]
+   puts $ext 
+   if { $ext == ".crd" } {
+    set linelist [::cgtools::utils::readcrd $readfile]  
+   } elseif { $ext == ".pdb" } {
+    set linelist [::cgtools::utils::readpdb $readfile]
+   } else {
+    puts "Error: Extension $ext not recognized in $readfile. "
+    exit
+   }
 
    set atomNumber 0
    set molNumber 0
