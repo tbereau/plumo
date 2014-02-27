@@ -249,9 +249,9 @@ namespace eval ::cgtools::espresso {
                 #   flush stdout
 
                 if { $cgtools::use_vmd == "offline" } {
-                    ::cgtools::utils::writecrd_charmm \
-		      "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].crd" \
-		      $topology -periodbox 1 -computecomz 1
+                    #::cgtools::utils::writecrd_charmm \
+		    #  "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].crd" \
+		    #  $topology -periodbox 1 -computecomz 1
                     
                     ::cgtools::utils::writepdb_charmm \
                         "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].pdb" $topology \

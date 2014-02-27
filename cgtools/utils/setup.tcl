@@ -388,8 +388,11 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/vmd_animation.script" "w"]
             puts $vmd_file "loadseries $ident.vmd 1 $firstconfignum"
             puts $vmd_file "rotate stop"
-            puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modstyle 0 0 Lines"
             puts $vmd_file "mol modcolor 0 0 Name"
+            puts $vmd_file "mol addrep 0"
+            puts $vmd_file "mol modselect 1 0 not resname POP"
+            puts $vmd_file "mol modstyle 1 0 Licorice 0.3 10. 10."
             puts $vmd_file "logfile vmd.log"
             puts $vmd_file "logfile off"
             foreach command $params(extracommands) {
@@ -403,8 +406,11 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/warm_animation.script" "w"]
             puts $vmd_file "loadseries warm.vmd 1 0"
             puts $vmd_file "rotate stop"
-            puts $vmd_file "mol modstyle 0 0 Licorice"
+            puts $vmd_file "mol modstyle 0 0 Lines"
             puts $vmd_file "mol modcolor 0 0 Name"
+            puts $vmd_file "mol addrep 0"
+            puts $vmd_file "mol modselect 1 0 not resname POP"
+            puts $vmd_file "mol modstyle 1 0 Licorice 0.3 10. 10."
             puts $vmd_file "logfile vmd.log"
             puts $vmd_file "logfile off"
             foreach command $params(extracommands) {

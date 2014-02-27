@@ -5,3 +5,5 @@
 # *.[oa]
 *~
 *.kdev4
+.cproject
+.project

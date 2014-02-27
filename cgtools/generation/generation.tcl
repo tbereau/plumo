@@ -19,6 +19,9 @@ namespace eval ::cgtools::generation {
   variable topology
   variable boxl
   variable notopo
+  # Bookkeeps coordinates read in each file. Useful when reading 
+  # the same file for different types of molecules (e.g., proteins AND lipids).
+  variable coordinput []
 
   variable trappedmols
   variable trappedmolsupdated
@@ -204,6 +207,39 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       set topology [join_topos $topology $topo]
     }
 
+  }
+  
+  # HACKED IN. CLEAN UP EVENTUALLY.
+  # If we find two PARTs (ID==2) in the second part of the system and variables 
+  # $::k_umb and ::$d_umb, we turn on umbrella  between the COM of the bilayer 
+  # and each particle automatically.
+  if { [llength $topologieslist] == 2 } {
+    puts "step1"
+    if { [llength [lindex $topologieslist 1]] == 2 } {
+      puts "step2"
+      if { [lindex [lindex [lindex $topologieslist 1] 0] 0] == 2 &&
+	[lindex [lindex [lindex $topologieslist 1] 1] 0] == 2 &&
+	[info exists ::k_umb] == 1 && [info exists ::z0_umb_1] == 1 &&
+	[info exists ::z0_umb_2] == 1 } {
+	# Turn on umbrella between COM of bilayer and each PART.
+	set nlipids [llength [lindex $topologieslist 0]]
+	set nlipid  [expr [llength [lindex [lindex $topologieslist 0] 0]]-1]
+	puts "$nlipids $nlipid"
+	set bead1 [expr $nlipids*$nlipid]
+	set bead2 [expr $nlipids*$nlipid+1]
+	
+	analyze set chains 1 1 [expr $nlipids*$nlipid]
+	set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+	set comzpart [setmd n_part]
+	part $comzpart pos 1 1 $memcomz virtual 1 molecule 0 type 9
+	
+	inter 80 umbrella $::k_umb 2 $::z0_umb_1
+	inter 91 umbrella $::k_umb 2 $::z0_umb_2
+	part $bead1 bond 80 $comzpart
+	part $bead2 bond 81 $comzpart
+	exit
+      }
+    }
   }
 
   #puts "topology= $topology"

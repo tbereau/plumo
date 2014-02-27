@@ -10,10 +10,11 @@ namespace eval cgtools::generation {}
 proc ::cgtools::generation::placeparticles_all { readfile } {
 
    variable topology
+   variable coordinput
+ 
  
    # Look for extension of input file
    set ext [string range $readfile [expr [string length $readfile]-4] end]
-   puts $ext 
    if { $ext == ".crd" } {
     set linelist [::cgtools::utils::readcrd $readfile]  
    } elseif { $ext == ".pdb" } {
@@ -27,7 +28,14 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
    set molNumber 0
    set mollists 0
    unset mollists 
+   set totalbeadsread 0
 
+   for { set i 0 } { $i < [llength coordinput] } { incr i } {
+     if { [lindex [lindex $coordinput $i] 0] == $readfile } {
+       incr atomNumber [lindex [lindex $coordinput $i] 1]
+     }
+   }
+   
    foreach mol $topology {
    	set moltype [lindex $mol 0]
     	set typeinfo [::cgtools::utils::matchtype $moltype ]
@@ -35,7 +43,6 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
  	set partbondlists [lindex $typeinfo 2]
     	set beadlists [lindex $partbondlists 0]
 	set nbeads_mol [llength $beadlists]
-    	
 	set partbondtypelists [lindex $typeinfo 3]
     	set beadtypelists [lindex $partbondtypelists 0]
         set itype_begin [lindex [lindex $beadtypelists 0] 0]
@@ -48,8 +55,8 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
 	        set posy [lindex $curline 6] 
 	        set posz [lindex $curline 7]
 
-	        set beadname_read [lindex $curline 2]
-
+	        set beadname_read [lindex $curline 2]		
+	        
 	        regsub ES $beadname_read E beadname_read 
 	        set beadname [string range $beadname_read 0 1]
 
@@ -69,10 +76,13 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
 		
 	}
 	lappend mollists $partlists 
-
+	incr totalbeadsread $nbeads_mol
         incr molNumber 
     }
-
+  
+    # Add information to coordinput variable
+    lappend coordinput [list $readfile $totalbeadsread]
+      
     return $mollists
 }
 

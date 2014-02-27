@@ -532,13 +532,15 @@ proc aa_lipid_inter { aa_num } {
           { "wca" 1.0 4.0 } { "wca" 1.0 4.0 }]
   } 41 { # end
       return [list { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
-          { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
+          { "wca" 0.0 4.0 } { "wca" 1.0 4.0 } \
           { "wca" 1.0 4.0 } { "wca" 1.0 4.0 }]
   } default {
       ::mmsg::err [namespace current] "No such residue $aa_name defined."
   }
 }
-
+      # return [list { "no" 0.0 0.0 } { "no" 0.0 0.0 } \
+      #     { "no" 0.0 0.0 } { "wca" 1.0 2.0 } \
+      #     { "wca" 1.0 2.0 } { "wca" 1.0 2.0 }]
 
 # lipid bead types CH:0; PH:1; GL:2; ES:3 4; AS:5; AD:6; AE:7
 set lipid_beads [list {0} {1} {2} {3 4} {5 6} {7}]
