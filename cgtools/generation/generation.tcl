@@ -334,7 +334,7 @@ proc ::cgtools::generation::get_userfixedparts {  } {
   variable userfixedparts
 
   if { [catch { set dum $userfixedparts } ] } {
-   ::mmsg::warn [namespace current] "no user fixed particles defined"
+   # ::mmsg::warn [namespace current] "no user fixed particles defined"
    return -1
    } else {
      return $userfixedparts

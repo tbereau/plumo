@@ -189,7 +189,7 @@ namespace eval ::cgtools {
     # ---------------------------------------------------------- #
     # Allow children namespaces that we can explicitly allow messages from these
     catch {::mmsg::setnamespaces ":: [namespace children ::cgtools] [namespace children ::parallel_tempering]"}
-    set message_allowlist { :: ::cgtools::utils ::cgtools::generation ::cgtools::analysis }
+    set message_allowlist { :: ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
     set children [namespace children ::cgtools::analysis]
     foreach child $children {
         lappend message_allowlist $child

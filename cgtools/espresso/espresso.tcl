@@ -61,12 +61,47 @@ namespace eval ::cgtools::espresso {
         }
 
         # ----------- Initialization ------------------ -----------#
-
         # Start a new computation, if no checkpoint
         if { !$checkpointexists } {
             # No checkpoint exists so we need to setup everything from scratch
             set startj 0
             set startk 0
+
+            # Check whether directory already exists
+            set resuming 0
+            set mdinit $cgtools::startmdtime
+            if { [file exists $cgtools::outputdir] == 1 } {
+                # Resuming old simulation. Look for latest PDB file
+                set tclfiles [glob -nocomplain -directory $cgtools::outputdir *.pdb]
+                if { [llength $tclfiles] > 0 } {
+                    set lastFile [lindex $tclfiles 0]
+                    set lastDate [file mtime [lindex $tclfiles 0]]
+                    foreach f $tclfiles {
+                        set fdate [file mtime $f]
+                        if { [expr {$fdate > $lastDate}] } {
+                            set lastFile $f
+                            set lastDate $fdate
+                        }
+                    }
+                }
+                # Don't resume a warmup file
+                if { [string first "warm" $lastFile] == "-1" } {
+                    # Read rough time step from file id
+                    set vmdId [string first $cgtools::ident.vmd $lastFile]
+                    if { $vmdId != -1 } {
+                        set vmdLgth [string length "$cgtools::ident.vmd"]
+                        set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
+                        set startk [expr $initTime + 1]
+                        set startj [expr $initTime + 1]
+                        set mdinit [expr $mdinit + \
+                            $initTime*$cgtools::int_steps*$cgtools::main_time_step]
+                    }
+                    puts "Resuming simulation from PDB: $lastFile"
+                    puts "init time step $mdinit"
+                    set cgtools::readpdbname $lastFile
+                    set resuming 1
+                }
+            }
 
             # Setup the output directory by creating it and copying forcetables and overlapped potcoffs to it
             ::cgtools::utils::setup_outputdir  $cgtools::outputdir -paramsfile $cgtools::paramsfile \
@@ -106,9 +141,11 @@ namespace eval ::cgtools::espresso {
             
             # See if there is any fixed molecules 
             set cgtools::trappedmols [::cgtools::generation::get_trappedmols]
-            # Fix molecules if necessary
-            if { $cgtools::trappedmols != -1 } {
-                ::cgtools::utils::trap_mols $cgtools::trappedmols
+            if { $resuming == 0 } {
+                # Fix molecules if necessary
+                if { $cgtools::trappedmols != -1 } {
+                    ::cgtools::utils::trap_mols $cgtools::trappedmols
+                }
             }
 
             # set exclustions for the bonded particles 1: 2-bodyinteraction  2: 3-body interaction
@@ -132,22 +169,23 @@ namespace eval ::cgtools::espresso {
             ::cgtools::utils::initialize_vmd $cgtools::use_vmd $cgtools::outputdir $cgtools::ident \
                 $topology -extracommands $cgtools::vmdcommands
 
-            #Perform the warm up integration
-            
-            #----------------------------------------------------------#
-            # Warm up containing fixed particles 
-            setmd time_step $cgtools::warm_time_step
-            thermostat langevin $cgtools::warmup_temp $cgtools::langevin_gamma
+            if { $resuming == 0 } {
+                #Perform the warm up integration
+                #----------------------------------------------------------#
+                # Warm up containing fixed particles 
+                setmd time_step $cgtools::warm_time_step
+                thermostat langevin $cgtools::warmup_temp $cgtools::langevin_gamma
 
-            mmsg::send $this "warming up at [setmd temp]"
-            ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs $cgtools::warmup_freq \
-                -outputdir $cgtools::outputdir
+                mmsg::send $this "warming up at [setmd temp]"
+                ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs $cgtools::warmup_freq \
+                    -outputdir $cgtools::outputdir
 
-            # Warm up without any fixed particle 
-            ::mmsg::send $this "warming up without fixed particles at  [setmd temp]"
-            ::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
-                -cfgs $cgtools::warmup_freq -startcap .1 -outputdir $cgtools::outputdir
-            
+                # Warm up without any fixed particle 
+                ::mmsg::send $this "warming up without fixed particles at  [setmd temp]"
+                ::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
+                    -cfgs $cgtools::warmup_freq -startcap .1 -outputdir $cgtools::outputdir
+            }
+
             # ----------- Integration Parameters after warmup -----------#
             # Set MD step, themostat after warm up
             setmd time_step $cgtools::main_time_step
@@ -160,7 +198,7 @@ namespace eval ::cgtools::espresso {
             mmsg::send $this "starting integration: run $cgtools::int_n_times times $cgtools::int_steps steps"
 
             # Reset the time to a starttime (usually zero) after warmup
-            setmd time $cgtools::startmdtime   
+            setmd time $mdinit
         }
         
         # Resume a computation, if exists checkpoint
