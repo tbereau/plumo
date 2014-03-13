@@ -63,56 +63,6 @@ namespace eval cgtools {
 
             ########## Start a new computation, if no checkpoint ##########
             if { !$checkpointexists } {
-                # Creating observable data file
-                set f [open $file_f w]
-                puts $f "\# Replica Observables at Temperature $temp"
-                puts $f "\# MD-Time \t Potential Energy \t replica id"
-                close $f
-
-                # Creating histogram data file
-                set f [open $file_h w]
-                puts $f "\# Histogram of Energies at Temperature $temp"
-                puts $f "\# Potential Energy \t Number of hits"
-                close $f
-
-                # Gnuplot script to look at all histograms at once
-                set f [open "$cgtools::outputdir/histogram.gnu" w]
-                puts $f "\# Gnuplot script to read histograms of all temperatures"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach temperature $cgtools::replica_temps {
-                    puts $f "\'temp$temperature/histogram.dat\' w histeps" nonewline
-                    if {$temperature != [lindex $cgtools::replica_temps end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
-                # Gnuplot script to look at all observables at once
-                set f [open "$cgtools::outputdir/observables.energy.gnu" w]
-                puts $f "\# Gnuplot script to read observables of all temperatures"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach temperature $cgtools::replica_temps {
-                    puts $f "\'temp$temperature/observables.dat\' w line" nonewline
-                    if {$temperature != [lindex $cgtools::replica_temps end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
-                set f [open "$cgtools::outputdir/observables.replica.gnu" w]
-                puts $f "\# Gnuplot script to read observables of all temperatures"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach temperature $cgtools::replica_temps {
-                    puts $f "\'temp$temperature/observables.dat\' u 1:3 w step" nonewline
-                    if {$temperature != [lindex $cgtools::replica_temps end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
                 # No checkpoint exists so we need to setup everything from scratch
                 set startj 0
                 set startk 0
@@ -142,7 +92,7 @@ namespace eval cgtools {
                             set startk [expr $initTime + 1]
                             set startj [expr $initTime + 1]
                             set mdinit [expr $mdinit + \
-                                $initTime * $cgtools::replica_timestep * $cgtools::main_time_step * \
+                                ($initTime+1) * $cgtools::replica_timestep * $cgtools::main_time_step * \
                                     $cgtools::write_frequency]
                         }
                         puts "Resuming simulation from PDB: $lastFile"
@@ -151,6 +101,60 @@ namespace eval cgtools {
                         set resuming 1
                     }
                 }
+
+                if { $resuming == 0 } {
+                    # Creating observable data file
+                    set f [open $file_f w]
+                    puts $f "\# Replica Observables at Temperature $temp"
+                    puts $f "\# MD-Time \t Potential Energy \t replica id"
+                    close $f
+
+                    # Creating histogram data file
+                    set f [open $file_h w]
+                    puts $f "\# Histogram of Energies at Temperature $temp"
+                    puts $f "\# Potential Energy \t Number of hits"
+                    close $f
+
+                    # Gnuplot script to look at all histograms at once
+                    set f [open "$cgtools::outputdir/histogram.gnu" w]
+                    puts $f "\# Gnuplot script to read histograms of all temperatures"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach temperature $cgtools::replica_temps {
+                        puts $f "\'temp$temperature/histogram.dat\' w histeps" nonewline
+                        if {$temperature != [lindex $cgtools::replica_temps end]} {
+                            puts $f ", " nonewline
+                        }
+                    }
+                    close $f
+
+                    # Gnuplot script to look at all observables at once
+                    set f [open "$cgtools::outputdir/observables.energy.gnu" w]
+                    puts $f "\# Gnuplot script to read observables of all temperatures"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach temperature $cgtools::replica_temps {
+                        puts $f "\'temp$temperature/observables.dat\' w line" nonewline
+                        if {$temperature != [lindex $cgtools::replica_temps end]} {
+                            puts $f ", " nonewline
+                        }
+                    }
+                    close $f
+                }
+
+                set f [open "$cgtools::outputdir/observables.replica.gnu" w]
+                puts $f "\# Gnuplot script to read observables of all temperatures"
+                puts $f ""
+                puts $f "p " nonewline
+                foreach temperature $cgtools::replica_temps {
+                    puts $f "\'temp$temperature/observables.dat\' u 1:3 w step" nonewline
+                    if {$temperature != [lindex $cgtools::replica_temps end]} {
+                        puts $f ", " nonewline
+                    }
+                }
+                close $f
+
+
 
 
                 # Setup the output directory by creating it and copying forcetables and overlapped potcoffs to it
@@ -225,24 +229,22 @@ namespace eval cgtools {
                 blockfile_write_topology $f_topo write topology   
                 close $f_topo
 
-                # Check if there are any extra vmdcommands and if not initialize a default
-                ::cgtools::utils::initialize_vmd $cgtools::use_vmd $folder $cgtools::ident \
-                    $topology -extracommands $cgtools::vmdcommands
+            # Check if there are any extra vmdcommands and if not initialize a default
+            ::cgtools::utils::initialize_vmd $cgtools::use_vmd $folder $cgtools::ident \
+                $topology -extracommands $cgtools::vmdcommands
 
-                if { $resuming == 0 } {
-                    #Perform the warm up integration
-                    #----------------------------------------------------------#
-                    # Warm up containing fixed particles 
-                    mmsg::send $this "warming up at [setmd temp]"
-                    ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs 10 \
-                        -outputdir $folder
+                #Perform the warm up integration
+                #----------------------------------------------------------#
+                # Warm up containing fixed particles 
+                mmsg::send $this "warming up at [setmd temp]"
+                ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs 10 \
+                    -outputdir $folder
 
-                    # If the membrane have any fixed particles, unfix them after warmup
-                    set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
-                    for {set i 0} { $i <  [setmd n_part] } {incr i} {
-                        if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-                            part [expr $i] fix 0 0 0
-                        }
+                # If the membrane have any fixed particles, unfix them after warmup
+                set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
+                for {set i 0} { $i <  [setmd n_part] } {incr i} {
+                    if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
+                        part [expr $i] fix 0 0 0
                     }
                 }
 
