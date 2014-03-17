@@ -36,11 +36,7 @@ namespace eval ::cgtools::forcefield {
         # Optional argument: lambda_i for FEP calculation.
         set nb_interactions ""
         set lambda_coupling $lambda_i
-        if { $cgtools::hremd != 1 } {
-	  source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
-	} else {
-	  source_hbond_ff
-	}
+        source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
         ::cgtools::utils::set_nb_interactions $nb_interactions
         integrate 0
     }

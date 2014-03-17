@@ -230,6 +230,14 @@ namespace eval ::cgtools::espresso {
 
         thermostat langevin $cgtools::systemtemp $cgtools::langevin_gamma
 
+        variable ::cgtools::implicit_membrane
+        if { $::cgtools::implicit_membrane == 1 } {
+            variable ::cgtools::forcefield::peptideb::softcore_flag
+            set softcore_flag 1
+            puts "Running implicit membrane"
+            ::cgtools::forcefield::update_peptide_ff 0.0
+        }
+
         if { $cgtools::thermo == "DPD" } {
             thermostat off
             set dpd_r_cut [setmd max_cut]

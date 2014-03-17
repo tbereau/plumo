@@ -45,8 +45,7 @@ set usage "Usage:
 \tEspresso cgtoolsmain.tcl <CONFIG_NAME> 
      * Possible options :
 \t-replica \[-connect HOST\] \t\t starts a replica exchange simulation
-\t-hremd \[-alt\] \[-connect HOST\] \[-port PORT\] \t\t Hamiltonian Replica Exchange MD
-\t   -alt option turns on alternative HREMD scheme (couple peptide-lipid interaction except termini).
+\t-hremd \[-connect HOST\] \[-port PORT\] \t\t Hamiltonian Replica Exchange MD
 \t-hybrid \t\t starts a MC-MD hybrid simulation
 \t-annealing \t\t starts a annealing simulation
 \t-new \t\t start a new simulation rather than starting from the last checkpoint (depending on CONFIG_FILE information)\n"
@@ -70,6 +69,8 @@ namespace eval ::cgtools {
     # Set default HREMD exchange controller
     variable hremd 0
     set hremd_connect 0
+    # Implicit membrane environment will trigger the softcore flag
+    variable implicit_membrane 0
 
     # Set default system parameters.
     set thermo Langevin
@@ -166,10 +167,6 @@ namespace eval ::cgtools {
                     set tcp_port [lindex $argv [expr $k+2]]
                     incr k 2
                 } 
-                if {[lindex $argv [expr $k+1]] == "-alt" } {
-                    set hremd 2
-                    incr k
-                }
             } "-new" {
                 set newcomp 1
                 ::mmsg::send $this "Start a new simulation, i.e., will NOT be resumed at the last checkpoint."

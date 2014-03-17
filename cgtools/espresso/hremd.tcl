@@ -45,12 +45,6 @@ namespace eval cgtools {
             variable folder
             variable ::cgtools::forcefield::peptideb::softcore_flag
             variable ::cgtools::hremd
-            # No softcore. We're scaling the Hbond strength only.  
-            set softcore_flag 0
-            if { $cgtools::hremd == 2 } {
-	      # Softcore only for hremd==2
-	      set softcore_flag 1
-            }
             
             set this [namespace current]
             mmsg::send $this "Starting HREMD instance at lambda $lambda"
