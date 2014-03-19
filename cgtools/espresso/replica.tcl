@@ -244,7 +244,10 @@ namespace eval cgtools {
                 set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
                 for {set i 0} { $i <  [setmd n_part] } {incr i} {
                     if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-                        part [expr $i] fix 0 0 0
+                        if { ([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
+                                $::cgtools::implicit_membrane == 0 } {
+                            part [expr $i] fix 0 0 0
+                        }
                     }
                 }
 
@@ -342,6 +345,23 @@ namespace eval cgtools {
             setmd time_step $cgtools::main_time_step
             thermostat langevin $temp $cgtools::langevin_gamma
 
+            variable ::cgtools::implicit_membrane
+            if { $::cgtools::implicit_membrane == 1 } {
+                variable ::cgtools::forcefield::peptideb::softcore_flag
+                set softcore_flag 1
+                puts "Running implicit membrane"
+                ::cgtools::forcefield::update_peptide_ff 0.0
+                # Freezing all lipids -- loop over all particles and look for types {0-7}
+                global ::cgtools::analysis::n_particles
+                for { set part_no 0 } {$part_no < $n_particles} {incr part_no} {
+                    set ptype [part $part_no print type]
+                    if { $ptype < 8 } {
+                        part $part_no fix 1 1 1
+                    }
+                }
+            }
+
+
             if { $cgtools::thermo == "DPD" } {
                 thermostat off
                 set dpd_r_cut [setmd max_cut]
@@ -349,7 +369,7 @@ namespace eval cgtools {
                 mmsg::send $this "DPD thermostat has been set"
                 mmsg::send $this "Thermostat is: [thermostat]"
             }
-            if { $cgtools::npt == "on" } {
+            if { $cgtools::npt == "on" && $::cgtools::implicit_membrane == 0 } {
                 integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
                 mmsg::send $this "npt integrator has been set"
                 flush stdout
