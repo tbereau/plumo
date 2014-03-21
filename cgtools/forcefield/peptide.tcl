@@ -374,8 +374,10 @@ set delta     0.0
 if { $peptideb::softcore_flag != 0 } {
   # Soft-core potential is turned on
   set lambda    $peptideb::lambda_coupling
-  set lambdaLJ  [::cgtools::utils::max [expr 2*($lambda-0.5)] 0.0]
-  set lambdaWCA [::cgtools::utils::min [expr 2* $lambda     ] 1.0]
+  # set lambdaLJ  [::cgtools::utils::max [expr 2*($lambda-0.5)] 0.0]
+  # set lambdaWCA [::cgtools::utils::min [expr 2* $lambda     ] 1.0]
+  set lambdaLJ  $lambda
+  set lambdaWCA $lambda
   set delta     $peptideb::softcore_delta  
 }
 
@@ -388,7 +390,7 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     set wca_sig   [expr ($peptideb::rvdw_Ca + 3.)]
     set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                             -(1-$lambdaWCA)*$delta)]
-    set wca_shift 0.25
+    set wca_shift 1.0
     set wca_off   0.0
     set wca_cap   0.0
     set wca_soft  ""
@@ -574,7 +576,8 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                              -(1-$lambdaWCA)*$delta)]
-        set wca_shift [expr 0.25];#*(1-$lambdaLJ)]
+        # No shift -> Reproduce repulsive LJ potential
+        set wca_shift 0.0
         # if { $cb_type == 40 || $cb_type == 41 } {
         #   # Termini; don't scale them
         #   set wca_cut [expr $wca_sig * pow(2,1/6.)]
@@ -626,7 +629,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
                                 -(1-$lambdaWCA)*$delta)]
-        set wca_shift 0.25
+        set wca_shift 1.0
         # if { $cb_type == 40 || $cb_type == 41} {
         #   # Termini; don't scale them
         #   set wca_cut [expr $wca_sig * pow(2,1/6.)]
