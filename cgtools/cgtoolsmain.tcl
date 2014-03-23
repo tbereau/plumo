@@ -71,6 +71,9 @@ namespace eval ::cgtools {
     set hremd_connect 0
     # Implicit membrane environment will trigger the softcore flag
     variable implicit_membrane 0
+    # Restraints on bilayer
+    variable membrane_restraint     0
+    variable membrane_restraint_k   0.5
 
     # Set default system parameters.
     set thermo Langevin

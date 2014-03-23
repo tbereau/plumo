@@ -145,7 +145,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       set tpspec [::cgtools::utils::matchtype [lindex $mtp 0]]
       set nbeads_mol [llength [lindex [lindex $tpspec 2] 0]]
       # Create the topology for this lipid type
-      set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]		
+      set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]    
 
       # Just in case zero molecules were specified we need
       # to check if topo was actually created at all by the
@@ -218,34 +218,79 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     if { [llength [lindex $topologieslist 1]] == 2 } {
       puts "step2"
       if { [lindex [lindex [lindex $topologieslist 1] 0] 0] == 2 &&
-	[lindex [lindex [lindex $topologieslist 1] 1] 0] == 2 &&
-	[info exists ::k_umb] == 1 && [info exists ::z0_umb_1] == 1 &&
-	[info exists ::z0_umb_2] == 1 } {
-	# Turn on umbrella between COM of bilayer and each PART.
-	set nlipids [llength [lindex $topologieslist 0]]
-	set nlipid  [expr [llength [lindex [lindex $topologieslist 0] 0]]-1]
-	puts "$nlipids $nlipid"
-	set bead1 [expr $nlipids*$nlipid]
-	set bead2 [expr $nlipids*$nlipid+1]
-	
-	analyze set chains 1 1 [expr $nlipids*$nlipid]
-	set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-	set comzpart [setmd n_part]
-	part $comzpart pos 1 1 $memcomz virtual 1 molecule 0 type 9
-	
-	inter 80 umbrella $::k_umb 2 $::z0_umb_1
-	inter 91 umbrella $::k_umb 2 $::z0_umb_2
-	part $bead1 bond 80 $comzpart
-	part $bead2 bond 81 $comzpart
-	exit
+        [lindex [lindex [lindex $topologieslist 1] 1] 0] == 2 &&
+        [info exists ::k_umb] == 1 && [info exists ::z0_umb_1] == 1 &&
+        [info exists ::z0_umb_2] == 1 } {
+        # Turn on umbrella between COM of bilayer and each PART.
+        set nlipids [llength [lindex $topologieslist 0]]
+        set nlipid  [expr [llength [lindex [lindex $topologieslist 0] 0]]-1]
+        puts "$nlipids $nlipid"
+        set bead1 [expr $nlipids*$nlipid]
+        set bead2 [expr $nlipids*$nlipid+1]
+        
+        analyze set chains 1 1 [expr $nlipids*$nlipid]
+        set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+        set comzpart [setmd n_part]
+        part $comzpart pos 1 1 $memcomz virtual 1 molecule 0 type 99
+        
+        inter 80 umbrella $::k_umb 2 $::z0_umb_1
+        inter 91 umbrella $::k_umb 2 $::z0_umb_2
+        part $bead1 bond 80 $comzpart
+        part $bead2 bond 81 $comzpart
+        exit
       }
     }
+  }
+
+  # lipid restraints
+  variable ::cgtools::membrane_restraint
+  if { $membrane_restraint == 1 } {
+    variable ::cgtools::membrane_restraint_k
+    lipid_z_restraints $membrane_restraint_k
   }
 
   #puts "topology= $topology"
   set topology [sort_topo $topology]
   return $topology
 
+}
+
+proc ::cgtools::generation::lipid_z_restraints { k_res } {
+  # k_res is the force constant of the restraints
+  variable topology
+  require_feature UMBRELLA
+  # virtual particle at bilayer midplane
+  set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+  set comzpart [setmd n_part]
+  part $comzpart pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1
+  # Compute average distance of 1st lipid bead to bilayer midplane
+  set glmidplane_z 0.0
+  set glmidplane_count 0
+  foreach mol $topology {
+    set moltype [lindex $mol 0]
+    if {$moltype == 0 } {
+      set glmidplane_z [expr $glmidplane_z + \
+        abs([lindex [part [lindex $mol 1] print pos] 2] - $memcomz)]
+      incr glmidplane_count
+    }
+  }
+  set glmidplane_z [expr $glmidplane_z/$glmidplane_count]
+  # Apply umbrella potentials
+  inter 200 umbrella $k_res 2 $glmidplane_z
+  inter 201 umbrella $k_res 2 [expr -1.*$glmidplane_z]
+  foreach mol $topology {
+    set moltype [lindex $mol 0]
+    if {$moltype == 0} {
+      # Apply constraint on GL bead (type 1+2)
+      set lipidBead [lindex $mol 3]
+      if {[expr [lindex [part $lipidBead print pos] 2] - $memcomz] > 0.} {
+        part $lipidBead bond 200 $comzpart        
+      } else {
+        part $lipidBead bond 201 $comzpart
+      }
+    }
+  }
+  ::mmsg::send [namespace current] "Applying z restraints on lipids: z_eq $glmidplane_z"
 }
 
 proc ::cgtools::generation::gen_peptide_topol { sequence } {
@@ -316,7 +361,7 @@ proc ::cgtools::generation::get_trappedmols {  } {
           if { [lindex $fmol 0] == [lindex $mol 1] } {
            lset trappedmols $j 0 $i
            set didntfindmol 0
-           break			
+           break      
          }
        }
        if { $didntfindmol } {

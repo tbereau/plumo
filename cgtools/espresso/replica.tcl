@@ -369,12 +369,18 @@ namespace eval cgtools {
                 mmsg::send $this "DPD thermostat has been set"
                 mmsg::send $this "Thermostat is: [thermostat]"
             }
+
+            variable ::cgtools::membrane_restraint
             if { $cgtools::npt == "on" && $::cgtools::implicit_membrane == 0 } {
-                integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
-                mmsg::send $this "npt integrator has been set"
-                flush stdout
-                #-cubic_box
-                thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v
+                if { ($::cgtools::membrane_restraint == 1 && $temp == [lindex $cgtools::replica_temps 0]) \
+                    || $::cgtools::membrane_restraint == 0} {
+                    # membrane_restraint -> NPT only in lowest replica
+                    integrate set npt_isotropic $cgtools::p_ext $cgtools::piston_mass 1 1 0
+                    mmsg::send $this "npt integrator has been set"
+                    flush stdout
+                    #-cubic_box
+                    thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v                    
+                }
             }
 
             mmsg::send $this "run [set kkkkkk] at time=[setmd time]"

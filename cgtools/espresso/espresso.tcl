@@ -168,23 +168,23 @@ namespace eval ::cgtools::espresso {
             # Check if there are any extra vmdcommands and if not initialize a default
             ::cgtools::utils::initialize_vmd $cgtools::use_vmd $cgtools::outputdir $cgtools::ident \
                 $topology -extracommands $cgtools::vmdcommands
+            
+            puts [part [expr [setmd n_part]-1] print pos fix]
 
-            if { $resuming == 0 } {
-                #Perform the warm up integration
-                #----------------------------------------------------------#
-                # Warm up containing fixed particles 
-                setmd time_step $cgtools::warm_time_step
-                thermostat langevin $cgtools::warmup_temp $cgtools::langevin_gamma
+            #Perform the warm up integration
+            #----------------------------------------------------------#
+            # Warm up containing fixed particles 
+            setmd time_step $cgtools::warm_time_step
+            thermostat langevin $cgtools::warmup_temp $cgtools::langevin_gamma
 
-                mmsg::send $this "warming up at [setmd temp]"
-                ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs $cgtools::warmup_freq \
-                    -outputdir $cgtools::outputdir
+            mmsg::send $this "warming up at [setmd temp]"
+            ::cgtools::utils::warmup  $cgtools::warmsteps $cgtools::warmtimes $topology -cfgs $cgtools::warmup_freq \
+                -outputdir $cgtools::outputdir
 
-                # Warm up without any fixed particle 
-                ::mmsg::send $this "warming up without fixed particles at  [setmd temp]"
-                ::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
-                    -cfgs $cgtools::warmup_freq -startcap .1 -outputdir $cgtools::outputdir
-            }
+            # Warm up without any fixed particle 
+            ::mmsg::send $this "warming up without fixed particles at  [setmd temp]"
+            ::cgtools::utils::warmup $cgtools::free_warmsteps $cgtools::free_warmtimes $topology \
+                -cfgs $cgtools::warmup_freq -startcap .1 -outputdir $cgtools::outputdir
 
             # ----------- Integration Parameters after warmup -----------#
             # Set MD step, themostat after warm up
@@ -195,6 +195,7 @@ namespace eval ::cgtools::espresso {
             ::cgtools::analysis::setup_analysis $cgtools::analysis_flags -outputdir  $cgtools::outputdir \
                 -g $cgtools::mgrid -str $cgtools::stray_cut_off
             
+
             mmsg::send $this "starting integration: run $cgtools::int_n_times times $cgtools::int_steps steps"
 
             # Reset the time to a starttime (usually zero) after warmup
@@ -288,14 +289,14 @@ namespace eval ::cgtools::espresso {
                     set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
                     for {set i 0} { $i <  [setmd n_part] } {incr i} {
                         if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-                            if { ([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
-                                $::cgtools::implicit_membrane == 0 } {
+                            if { (([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
+                                $::cgtools::implicit_membrane == 0) && [part $i print virtual] == 0} {
                                 part [expr $i] fix 0 0 0
                             }
                         }
                     }
                     # FIX LATER
-                    setmd time_step 0.01      
+                    setmd time_step $cgtools::main_time_step      
                 }
                 
 
