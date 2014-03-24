@@ -246,7 +246,8 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   variable ::cgtools::membrane_restraint
   if { $membrane_restraint == 1 } {
     variable ::cgtools::membrane_restraint_k
-    lipid_z_restraints $membrane_restraint_k
+    variable ::cgtools::membrane_restraint_dist
+    lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
   }
 
   #puts "topology= $topology"
@@ -255,7 +256,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
 }
 
-proc ::cgtools::generation::lipid_z_restraints { k_res } {
+proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
   # k_res is the force constant of the restraints
   variable topology
   require_feature UMBRELLA
@@ -263,18 +264,22 @@ proc ::cgtools::generation::lipid_z_restraints { k_res } {
   set memcomz [::cgtools::utils::compute_membrane_comz $topology]
   set comzpart [setmd n_part]
   part $comzpart pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1
-  # Compute average distance of 1st lipid bead to bilayer midplane
   set glmidplane_z 0.0
-  set glmidplane_count 0
-  foreach mol $topology {
-    set moltype [lindex $mol 0]
-    if {$moltype == 0 } {
-      set glmidplane_z [expr $glmidplane_z + \
-        abs([lindex [part [lindex $mol 1] print pos] 2] - $memcomz)]
-      incr glmidplane_count
+  if {$dist < 0.} {
+    # Compute average distance of 1st lipid bead to bilayer midplane
+    set glmidplane_count 0
+    foreach mol $topology {
+      set moltype [lindex $mol 0]
+      if {$moltype == 0 } {
+        set glmidplane_z [expr $glmidplane_z + \
+          abs([lindex [part [lindex $mol 1] print pos] 2] - $memcomz)]
+        incr glmidplane_count
+      }
     }
+    set glmidplane_z [expr $glmidplane_z/$glmidplane_count]
+  } else {
+    set glmidplane_z $dist
   }
-  set glmidplane_z [expr $glmidplane_z/$glmidplane_count]
   # Apply umbrella potentials
   inter 200 umbrella $k_res 2 $glmidplane_z
   inter 201 umbrella $k_res 2 [expr -1.*$glmidplane_z]

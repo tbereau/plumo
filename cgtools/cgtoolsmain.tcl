@@ -72,8 +72,9 @@ namespace eval ::cgtools {
     # Implicit membrane environment will trigger the softcore flag
     variable implicit_membrane 0
     # Restraints on bilayer
-    variable membrane_restraint     0
-    variable membrane_restraint_k   0.5
+    variable membrane_restraint       0
+    variable membrane_restraint_k     0.5
+    variable membrane_restraint_dist -1.0
 
     # Set default system parameters.
     set thermo Langevin
