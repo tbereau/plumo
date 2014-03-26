@@ -12,7 +12,7 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
    variable topology
    variable coordinput
  
- 
+
    # Look for extension of input file
    set ext [string range $readfile [expr [string length $readfile]-4] end]
    if { $ext == ".crd" } {
@@ -92,8 +92,7 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
 proc ::cgtools::generation::placeparticles_template { readfile } {
 
    variable topology
- 
- 
+   
    # Look for extension of input file
    set ext [string range $readfile [expr [string length $readfile]-4] end]
    puts $ext 

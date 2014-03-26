@@ -186,6 +186,10 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     ::mmsg::debug [namespace current] "executing $command"
     #eval $createcommand -readfile $geometryreadfile
     #puts "::cgtools::generation::generate_system::geometryreadfile = $geometryreadfile"
+    variable ::cgtools::pdb_resume
+    if { $pdb_resume != "" } {
+      set geometryreadfile $pdb_resume
+    }
     if { [catch  {eval $createcommand -readfile $geometryreadfile} errm ] } {
       mmsg::err [namespace current] "couldn't execute creation command for $command \n $errm"
     }

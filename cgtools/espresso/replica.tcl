@@ -54,6 +54,8 @@ namespace eval cgtools {
             if { [catch {exec mkdir $folder}] } {
                 # Directory exists. Try to resume the simulation (see below).
                 set resuming 1
+            } else {
+                puts "No existing directory. Fresh start."
             }
             set file_f [join [list $folder/observables.dat ] ""]
             set file_h [join [list $folder /histogram.dat ] ""]
@@ -69,21 +71,21 @@ namespace eval cgtools {
 
                 if { $resuming == 1 } {
                     set resuming 0
+                    variable ::cgtools::pdb_resume
                     # Resuming old simulation. Look for latest PDB file
                     set tclfiles [glob -nocomplain -directory $folder *.pdb]
                     if { [llength $tclfiles] > 0} {
-                        set lastFile [lindex $tclfiles 0]
-                        set lastDate [file mtime [lindex $tclfiles 0]]
+                        set lastFile ""
+                        set lastDate "000000000"
                         foreach f $tclfiles {
                             set fdate [file mtime $f]
-                            if { [expr {$fdate > $lastDate}] } {
+                            if { [expr {$fdate > $lastDate}] && [string first "warm" $f] == "-1" } {
                                 set lastFile $f
                                 set lastDate $fdate
                             }
                         }
                     }
-                    # Don't resume a warmup file
-                    if { [string first "warm" $lastFile] == "-1" } {
+                    if { $lastFile != "" } {
                         # Read rough time step from file id
                         set vmdId [string first $cgtools::ident.vmd $lastFile]
                         if { $vmdId != -1 } {
@@ -95,10 +97,12 @@ namespace eval cgtools {
                                 ($initTime+1) * $cgtools::replica_timestep * $cgtools::main_time_step * \
                                     $cgtools::write_frequency]
                         }
-                        puts "Resuming simulation from PDB: $lastFile"
-                        puts "init time step $mdinit"
-                        set cgtools::readpdbname $lastFile
+                        set ::cgtools::pdb_resume $lastFile
                         set resuming 1
+                        puts "Resuming simulation from PDB: $pdb_resume"
+                        puts "init time step $mdinit" 
+                    } else {
+                        puts "No PDB to resume from"
                     }
                 }
 
@@ -140,21 +144,20 @@ namespace eval cgtools {
                         }
                     }
                     close $f
-                }
 
-                set f [open "$cgtools::outputdir/observables.replica.gnu" w]
-                puts $f "\# Gnuplot script to read observables of all temperatures"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach temperature $cgtools::replica_temps {
-                    puts $f "\'temp$temperature/observables.dat\' u 1:3 w step" nonewline
-                    if {$temperature != [lindex $cgtools::replica_temps end]} {
-                        puts $f ", " nonewline
+                    set f [open "$cgtools::outputdir/observables.replica.gnu" w]
+                    puts $f "\# Gnuplot script to read observables of all temperatures"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach temperature $cgtools::replica_temps {
+                        puts $f "\'temp$temperature/observables.dat\' u 1:3 w step" nonewline
+                        if {$temperature != [lindex $cgtools::replica_temps end]} {
+                            puts $f ", " nonewline
+                        }
                     }
+                    close $f
+
                 }
-                close $f
-
-
 
 
                 # Setup the output directory by creating it and copying forcetables and overlapped potcoffs to it

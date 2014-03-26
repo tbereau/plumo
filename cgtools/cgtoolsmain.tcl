@@ -75,6 +75,8 @@ namespace eval ::cgtools {
     variable membrane_restraint       0
     variable membrane_restraint_k     0.5
     variable membrane_restraint_dist -1.0
+    # resume simulation
+    variable pdb_resume ""
 
     # Set default system parameters.
     set thermo Langevin
