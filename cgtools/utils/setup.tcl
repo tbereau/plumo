@@ -388,6 +388,8 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/vmd_animation.script" "w"]
             puts $vmd_file "loadseries $ident.vmd 1 $firstconfignum"
             puts $vmd_file "rotate stop"
+            puts $vmd_file "rotate x by -90.0"
+            puts $vmd_file "display projection Orthographic"
             puts $vmd_file "mol modstyle 0 0 Lines"
             puts $vmd_file "mol modcolor 0 0 Name"
             puts $vmd_file "mol addrep 0"
@@ -406,6 +408,8 @@ proc ::cgtools::utils::initialize_vmd { flag outputdir ident topology args } {
             set vmd_file [open "$outputdir/warm_animation.script" "w"]
             puts $vmd_file "loadseries warm.vmd 1 0"
             puts $vmd_file "rotate stop"
+            puts $vmd_file "rotate x by -90.0"
+            puts $vmd_file "display projection Orthographic"            
             puts $vmd_file "mol modstyle 0 0 Lines"
             puts $vmd_file "mol modcolor 0 0 Name"
             puts $vmd_file "mol addrep 0"
