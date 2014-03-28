@@ -77,6 +77,8 @@ namespace eval ::cgtools {
     variable membrane_restraint_dist -1.0
     # resume simulation
     variable pdb_resume ""
+    # Multi-timestepping
+    variable multitimestep 0
 
     # Set default system parameters.
     set thermo Langevin
@@ -122,6 +124,17 @@ namespace eval ::cgtools {
     set nprocessors $params(n)
     ::mmsg::send $this "using paramsfile: $paramsfile"
     source $paramsfile
+
+    # Make sure we don't have multitimestep with NPT
+    if { $multitimestep > 0 } {
+        require_feature MULTI_TIMESTEP
+        ::mmsg::send $this "Turning on multi-timestepping algorithm."
+        ::mmsg::send $this [format "Main time step: %7.4f" $main_time_step]
+        ::mmsg::send $this [format "Smaller time step: %7.4f" [expr $main_time_step/$multitimestep]]
+        if { $npt == "on" } {
+            ::mmsg::err "Can't combine multitimestep with NPT thermostat."
+        }
+    }
 
     # MPI distribution
     # MPI distribution of bilayer

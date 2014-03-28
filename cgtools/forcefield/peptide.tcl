@@ -8,7 +8,9 @@
 # Check that all interactions are compiled in
 require_feature LENNARD_JONES
 require_feature LENNARD_JONES_GENERIC
-require_feature COS2
+if { $peptideb::softcore_flag != 0 } {
+  require_feature COS2
+}
 
 # The atom types in this peptide are respectively 8:N, 9:CA, 10: Pro-N (no H-bond), 11:C, 12:O, 15:term-N, 16:term-C
 # 20-39: CB (Side chain beads)

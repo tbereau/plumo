@@ -386,7 +386,7 @@ namespace eval cgtools {
                 }
             }
 
-            mmsg::send $this "run [set kkkkkk] at time=[setmd time]"
+            # mmsg::send $this "run [set kkkkkk] at time=[setmd time]"
 
             # Call all of the analyze routines that we specified when setting up our analysis
             ::cgtools::analysis::do_analysis
@@ -429,7 +429,7 @@ namespace eval cgtools {
             #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
 
             # Do the real work of integrating equations of motion
-            mmsg::send $this "starting integration: run $cgtools::replica_timestep steps"
+            # mmsg::send $this "starting integration: run $cgtools::replica_timestep steps"
             integrate $cgtools::replica_timestep
 
             ## get the id of temperatures in parallel computation
