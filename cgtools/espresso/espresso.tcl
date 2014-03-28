@@ -94,7 +94,8 @@ namespace eval ::cgtools::espresso {
                         set startk [expr $initTime + 1]
                         set startj [expr $initTime + 1]
                         set mdinit [expr $mdinit + \
-                            $initTime*$cgtools::int_steps*$cgtools::main_time_step]
+                            ($initTime+1) * $cgtools::int_steps * $cgtools::main_time_step * \
+                                    $cgtools::write_frequency]
                     }
                     puts "Resuming simulation from PDB: $lastFile"
                     puts "init time step $mdinit"
