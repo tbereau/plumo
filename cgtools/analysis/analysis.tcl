@@ -146,7 +146,7 @@ proc ::cgtools::analysis::setup_analysis { commands args } {
     variable stray_cut_off
     set docommands $commands
 
-    ::mmsg::send [namespace current] "setting up analysis"
+    ::mmsg::debug [namespace current] "setting up analysis"
 
     set options {
         {outputdir.arg      "./"    "name of output directory " }

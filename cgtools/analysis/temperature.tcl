@@ -35,7 +35,7 @@ proc ::cgtools::analysis::temperature::printav_temperature { } {
     if { $av_temperature_i > 0 } {
 	set avtemp [expr $av_temperature/$av_temperature_i]
     	set f_tvstemp [open "$outputdir/time_vs_temperature$suffix" a]
-   	puts $f_tvstemp "$time $avtemp"
+   	puts $f_tvstemp [format "%15.4f %7.4f" $time $avtemp]
    	close $f_tvstemp
     } else {
 	::mmsg::warn [namespace current] "can't print temperature"
@@ -77,7 +77,7 @@ proc ::cgtools::analysis::temperature::analyze_temperature {  } {
     #puts "deg_free is $deg_free, npart is $npart"
 
     set inst_temperature [expr [analyze energy kinetic]/(($deg_free/2.0)*$npart)]
-    #puts "inst_temperature is $inst_temperature"
+    # puts "inst_temperature is $inst_temperature"
 
     set av_temperature [expr $av_temperature + $inst_temperature]
 

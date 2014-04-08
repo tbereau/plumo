@@ -136,10 +136,6 @@ proc ::cgtools::utils::setup_outputdir { outputdir args } {
         }
     }
 
-    # Construct a directory for checkpoint backups inside outputdir
-    if { ![ file isdirectory $outputdir/checkpoint_bak)] } {    
-        catch { exec mkdir $outputdir/checkpoint_bak }    
-    }
 }
 
 

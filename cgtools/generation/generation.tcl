@@ -267,7 +267,8 @@ proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
   # virtual particle at bilayer midplane
   set memcomz [::cgtools::utils::compute_membrane_comz $topology]
   set comzpart [setmd n_part]
-  part $comzpart pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1
+  # Put super large mass to affect the temperature calculation minimally
+  part $comzpart pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1 mass 10000
   set glmidplane_z 0.0
   if {$dist < 0.} {
     # Compute average distance of 1st lipid bead to bilayer midplane
@@ -299,6 +300,7 @@ proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
       }
     }
   }
+
   ::mmsg::send [namespace current] "Applying z restraints on lipids: z_eq $glmidplane_z"
 }
 

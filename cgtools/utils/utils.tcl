@@ -76,10 +76,10 @@ proc ::cgtools::utils::write_histogram {filename current_energy} {
 # Append observables to a file
 proc ::cgtools::utils::append_obs {filename current_energy {id -1}} {
          set f [open $filename a]
-         puts $f "[setmd time] " nonewline
-         puts $f " \t$current_energy" nonewline
+         puts $f [format "%15.4f " [setmd time]] nonewline
+         puts $f [format "%12.4f " $current_energy] nonewline
          if { $id != -1 } {
-                 puts $f " \t$id"
+                 puts $f [format "%3d" $id]
          } else { 
                  puts $f ""
          }

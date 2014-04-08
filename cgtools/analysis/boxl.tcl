@@ -38,7 +38,7 @@ proc ::cgtools::analysis::boxl::printav_boxl { } {
 	set avbly [expr [lindex $av_boxl 1]/($av_boxl_i*1.0)]
 	set avblz [expr [lindex $av_boxl 2]/($av_boxl_i*1.0)]
     	set f_tvsbl [open "$outputdir/time_vs_boxl$suffix" a]
-	puts $f_tvsbl "$time $avblx $avbly $avblz"
+	puts $f_tvsbl [format "%15.4f %7.4f %7.4f %7.4f" $time $avblx $avbly $avblz]
     	close $f_tvsbl
     } else {
 	::mmsg::warn [namespace current] "can't print average box length"

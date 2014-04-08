@@ -201,11 +201,14 @@ namespace eval ::cgtools {
             }
         }
     } 
+    ::mmsg::send $this "Finished parsing options."
 
     # ---------------------------------------------------------- #
     # Allow children namespaces that we can explicitly allow messages from these
-    catch {::mmsg::setnamespaces ":: [namespace children ::cgtools] [namespace children ::parallel_tempering]"}
+    ::mmsg::send $this "Assigning namespaces"
+    catch {::mmsg::setnamespaces "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}"}
     set message_allowlist { :: ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
+    ::mmsg::send $this "Assigning children namespaces"
     set children [namespace children ::cgtools::analysis]
     foreach child $children {
         lappend message_allowlist $child
@@ -226,6 +229,7 @@ namespace eval ::cgtools {
     #::mmsg::enable debug
 
     # Read forcefield
+    ::mmsg::send $this "Reading force field"
     ::cgtools::forcefield::source_all_ff
 
     # Erase all the directory we're not resuming
@@ -240,7 +244,7 @@ namespace eval ::cgtools {
         # Replica exchange is turned on
 
         # If <ident> doesn't exist then create it
-        catch { exec mkdir $ident }
+        catch { exec mkdir -p $ident }
 
         ::mmsg::send $this "Starting parallel tempering at temperatures: $replica_temps"
 
@@ -258,7 +262,7 @@ namespace eval ::cgtools {
     } elseif { $hremd != 0 } {
         # HREMD is turned on
         # If <ident> doesn't exist then create it
-        catch { exec mkdir $ident }
+        catch { exec mkdir -p $ident }
         ::mmsg::send $this "Starting HREMD simulation with coupling lambda:\n  $lambda_values"
         if {$hremd_connect == 0} {
             parallel_tempering::main -values $lambda_values -rounds $replica_rounds \

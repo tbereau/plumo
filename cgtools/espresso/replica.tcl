@@ -40,6 +40,7 @@ namespace eval cgtools {
             variable jjjjjj
             variable kkkkkk
             variable initial_temp $temp
+            variable prev_temp $temp
             variable checkpointexists
             variable folder
             
@@ -169,9 +170,6 @@ namespace eval cgtools {
                     -tabdir $cgtools::tabledir -tabnames $cgtools::tablenames -coffdir $cgtools::overlapdir \
                     -coffnames $cgtools::overlapnames -readpdbdir $cgtools::readpdbdir \
                     -readpdbname $cgtools::readpdbname
-                # Construct a directory for checkpoint backups inside $cgtools::outputdir/temp$temp 
-                catch { exec rmdir $cgtools::outputdir/checkpoint_bak }    
-                catch { exec mkdir $folder/checkpoint_bak }    
 
                 # Set the box dimensions
                 setmd box_l [lindex $cgtools::setbox_l 0] [lindex $cgtools::setbox_l 1] [lindex $cgtools::setbox_l 2]
@@ -329,6 +327,7 @@ namespace eval cgtools {
             variable kkkkkk
 
             variable initial_temp
+            variable prev_temp
 
             ### ONly necessary if each instance handles more than one configuration, 
             ### e.g. 300 temperatures in 10 parallel processers
@@ -347,6 +346,15 @@ namespace eval cgtools {
             # ----------- Integration Parameters after warmup -----------#
             setmd time_step $cgtools::main_time_step
             thermostat langevin $temp $cgtools::langevin_gamma
+
+            # Rescale velocities
+            global ::cgtools::analysis::n_particles
+            set facvec [expr sqrt($temp/$prev_temp)]
+            for { set part_no 0 } {$part_no < $n_particles } { incr part_no } {
+                set partvel [::cgtools::utils::scalevec [part $part_no print v] $facvec]
+                part $part_no v [lindex $partvel 0] [lindex $partvel 1] [lindex $partvel 2]
+            }
+            set prev_temp $temp
 
             variable ::cgtools::implicit_membrane
             if { $::cgtools::implicit_membrane == 1 } {
@@ -388,46 +396,6 @@ namespace eval cgtools {
 
             # mmsg::send $this "run [set kkkkkk] at time=[setmd time]"
 
-            # Call all of the analyze routines that we specified when setting up our analysis
-            ::cgtools::analysis::do_analysis
-
-            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
-            if { [expr [set kkkkkk] + 1] % $cgtools::analysis_write_frequency ==0 } {
-                ::cgtools::analysis::print_averages
-                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
-            }
-
-            # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
-            if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
-                #polyBlockWrite "$folder/$cgtools::ident.[format %04d [set jjjjjj]].out" \
-                                                                                #   {time box_l npt_p_diff } \
-                                                                                #   {id pos type mass v f molecule} 
-                mmsg::send $this "wrote file $folder/$cgtools::ident.[format %04d [set jjjjjj]].out " 
-                flush stdout
-
-                if { $cgtools::use_vmd == "offline" } {
-                    ::cgtools::utils::writepdb_charmm \
-                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
-                        $topology -periodbox 1
-                }
-
-                incr jjjjjj
-
-                # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
-                set jjjjjj_$temp [set jjjjjj]
-                set topology_$temp [set topology]
-                mmsg::send $this "setting checkpoint_$temp [set kkkkkk] [setmd time] [set jjjjjj]"   
-                catch { exec rm -f $folder/checkpoint.latest.chk} 
-                #checkpoint_set "$folder/checkpoint.latest.out"
-                # Try to copy a checkpoint to the backup checkpoint folder
-                # Usefull if the program crashes while writing a checkpoint
-                if { [ catch { exec cp -f $folder/checkpoint.latest.out \
-                                   $folder/checkpoint_bak/checkpoint.latest.out } ] } {
-                    mmsg::warn $this "warning: couldn't copy backup checkpoint"
-                }
-            }
-            #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
-
             # Do the real work of integrating equations of motion
             # mmsg::send $this "starting integration: run $cgtools::replica_timestep steps"
             integrate $cgtools::replica_timestep
@@ -442,14 +410,42 @@ namespace eval cgtools {
             set current_energy [expr [analyze energy total]-[analyze energy kinetic]]
 
             ::cgtools::utils::append_obs $file_f $current_energy $label
-            ::cgtools::utils::write_histogram $file_h $current_energy          
+            ::cgtools::utils::write_histogram $file_h $current_energy   
+
+            # Setup analysis
+            ::cgtools::analysis::setup_analysis $cgtools::analysis_flags -outputdir $folder \
+                -g $cgtools::mgrid -str $cgtools::stray_cut_off
+
+
+            # Call all of the analyze routines that we specified when setting up our analysis
+            ::cgtools::analysis::do_analysis
+
+            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
+            if { [expr [set kkkkkk] + 1] % $cgtools::analysis_write_frequency ==0 } {
+                ::cgtools::analysis::print_averages
+                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
+            }
+
+            # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
+            if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
+                if { $cgtools::use_vmd == "offline" } {
+                    ::cgtools::utils::writepdb_charmm \
+                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
+                        $topology -periodbox 1
+                }
+
+                incr jjjjjj
+            }
+            #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
             
             incr kkkkkk
 
             # Set the elapsed CPU time in computation, do not count that used for warm up
             set timingcurr [clock clicks -milliseconds]
-            set elapsedtime [expr  $timingcurr - $timingstart]
-            ::mmsg::send $this "elapsed time: $elapsedtime"
+            set elapsedtime [expr  ($timingcurr - $timingstart)/1000.]
+            set widthrounds [string length $::cgtools::replica_rounds]
+            ::mmsg::send $this [format "Frame: %[set widthrounds]d/%[set widthrounds]d; elapsed time: %9.0f seconds" \
+                $kkkkkk $cgtools::replica_rounds $elapsedtime]
 
             ### ONly necessary if each instance handles more than one configuration, 
             ### e.g. 300 temperatures in 10 parallel processers
