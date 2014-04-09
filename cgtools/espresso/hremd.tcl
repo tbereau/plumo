@@ -51,6 +51,10 @@ namespace eval cgtools {
             mmsg::send $this "Using softcore potentials"
             set ::cgtools::forcefield::peptideb::softcore_flag 1
 
+            # Resume old simulation
+            set mdinit $cgtools::startmdtime
+            set resuming 0
+
             # Set the output folders 
             set folder "$cgtools::outputdir/lambda$lambda"
             catch {exec mkdir $folder}
@@ -62,59 +66,99 @@ namespace eval cgtools {
 
             ########## Start a new computation, if no checkpoint ##########
             if { !$checkpointexists } {
-                # Creating observable data file
-                set f [open $file_f w]
-                puts $f "\# HREMD Observables at Hamiltonian coupling $lambda"
-                puts $f "\# MD-Time \t Potential Energy \t replica id"
-                close $f
-
-                # Creating histogram data file
-                set f [open $file_h w]
-                puts $f "\# Histogram of Energies at Hamiltonian coupling $lambda"
-                puts $f "\# Potential Energy \t Number of hits"
-                close $f
-
-                # Gnuplot script to look at all histograms at once
-                set f [open "$cgtools::outputdir/histogram.gnu" w]
-                puts $f "\# Gnuplot script to read histograms at all Hamiltonian couplings"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach lambda_i $cgtools::lambda_values {
-                    puts $f "\'lambda$lambda_i/histogram.dat\' w histeps" nonewline
-                    if {$lambda_i != [lindex $cgtools::lambda_values end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
-                # Gnuplot script to look at all observables at once
-                set f [open "$cgtools::outputdir/observables.energy.gnu" w]
-                puts $f "\# Gnuplot script to read observables at all Hamiltonian couplings"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach lambda_i $cgtools::lambda_values {
-                    puts $f "\'lambda$lambda_i/observables.dat\' w line" nonewline
-                    if {$lambda_i != [lindex $cgtools::lambda_values end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
-                set f [open "$cgtools::outputdir/observables.hremd.gnu" w]
-                puts $f "\# Gnuplot script to read observables at all Hamiltonian couplings"
-                puts $f ""
-                puts $f "p " nonewline
-                foreach lambda_i $cgtools::lambda_values {
-                    puts $f "\'lambda$lambda_i/observables.dat\' u 1:3 w step" nonewline
-                    if {$lambda_i != [lindex $cgtools::lambda_values end]} {
-                        puts $f ", " nonewline
-                    }
-                }
-                close $f
-
                 # No checkpoint exists so we need to setup everything from scratch
                 set startj 0
                 set startk 0
+
+                if { $resuming == 1 } {
+                    set resuming 0
+                    variable ::cgtools::pdb_resume
+                    # Resuming old simulation. Look for latest PDB file
+                    set tclfiles [glob -nocomplain -directory $folder *.pdb]
+                    if { [llength $tclfiles] > 0} {
+                        set lastFile ""
+                        set lastDate "000000000"
+                        foreach f $tclfiles {
+                            set fdate [file mtime $f]
+                            if { [expr {$fdate > $lastDate}] && [string first "warm" $f] == "-1" } {
+                                set lastFile $f
+                                set lastDate $fdate
+                            }
+                        }
+                    }
+                    if { $lastFile != "" } {
+                        # Read rough time step from file id
+                        set vmdId [string first $cgtools::ident.vmd $lastFile]
+                        if { $vmdId != -1 } {
+                            set vmdLgth [string length "$cgtools::ident.vmd"]
+                            set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
+                            set startk [expr $initTime + 1]
+                            set startj [expr $initTime + 1]
+                            set mdinit [expr $mdinit + \
+                                ($initTime+1) * $cgtools::hremd_timestep * $cgtools::main_time_step * \
+                                    $cgtools::write_frequency]
+                        }
+                        set ::cgtools::pdb_resume $lastFile
+                        set resuming 1
+                        puts "Resuming simulation from PDB: $pdb_resume"
+                        puts "init time step $mdinit" 
+                    } else {
+                        puts "No PDB to resume from"
+                    }
+                }
+
+                if { $resuming == 0 } {
+                    # Creating observable data file
+                    set f [open $file_f w]
+                    puts $f "\# HREMD Observables at Hamiltonian coupling $lambda"
+                    puts $f "\# MD-Time \t Potential Energy \t replica id"
+                    close $f
+
+                    # Creating histogram data file
+                    set f [open $file_h w]
+                    puts $f "\# Histogram of Energies at Hamiltonian coupling $lambda"
+                    puts $f "\# Potential Energy \t Number of hits"
+                    close $f
+
+                    # Gnuplot script to look at all histograms at once
+                    set f [open "$cgtools::outputdir/histogram.gnu" w]
+                    puts $f "\# Gnuplot script to read histograms at all Hamiltonian couplings"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach lambda_i $cgtools::lambda_values {
+                        puts $f "\'lambda$lambda_i/histogram.dat\' w histeps" nonewline
+                        if {$lambda_i != [lindex $cgtools::lambda_values end]} {
+                            puts $f ", " nonewline
+                        }
+                    }
+                    close $f
+
+                    # Gnuplot script to look at all observables at once
+                    set f [open "$cgtools::outputdir/observables.energy.gnu" w]
+                    puts $f "\# Gnuplot script to read observables at all Hamiltonian couplings"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach lambda_i $cgtools::lambda_values {
+                        puts $f "\'lambda$lambda_i/observables.dat\' w line" nonewline
+                        if {$lambda_i != [lindex $cgtools::lambda_values end]} {
+                            puts $f ", " nonewline
+                        }
+                    }
+                    close $f
+
+                    set f [open "$cgtools::outputdir/observables.hremd.gnu" w]
+                    puts $f "\# Gnuplot script to read observables at all Hamiltonian couplings"
+                    puts $f ""
+                    puts $f "p " nonewline
+                    foreach lambda_i $cgtools::lambda_values {
+                        puts $f "\'lambda$lambda_i/observables.dat\' u 1:3 w step" nonewline
+                        if {$lambda_i != [lindex $cgtools::lambda_values end]} {
+                            puts $f ", " nonewline
+                        }
+                    }
+                    close $f
+                }
+
 
                 # Setup system
                 ::cgtools::utils::setup_outputdir  $cgtools::outputdir -paramsfile $cgtools::paramsfile \
@@ -190,10 +234,7 @@ namespace eval cgtools {
                 set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
                 for {set i 0} { $i <  [setmd n_part] } {incr i} {
                     if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-                        if { ([part $i print type] > 7 && $lambda < 0.5) || \
-                                $lambda > 0.5 } {
-                            part [expr $i] fix 0 0 0
-                        }
+                        part [expr $i] fix 0 0 0
                     }
                 }
 
@@ -213,7 +254,7 @@ namespace eval cgtools {
                 thermostat langevin $cgtools::systemtemp $cgtools::langevin_gamma
 
                 # Reset the time to a starttime (usually zero) after warmup
-                setmd time $cgtools::startmdtime 
+                setmd time $mdinit 
             }
             
             # Resume a computation, if exists checkpoint
@@ -291,18 +332,6 @@ namespace eval cgtools {
             setmd time_step $cgtools::main_time_step
             thermostat langevin $cgtools::systemtemp $cgtools::langevin_gamma
 
-            if { $lambda < 0.5 } {
-                # Freezing all lipids -- loop over all particles and look for types {0-7}
-                global ::cgtools::analysis::n_particles
-                for { set part_no 0 } {$part_no < $n_particles} {incr part_no} {
-                    set ptype [part $part_no print type]
-                    if { $ptype < 8 } {
-                        part $part_no fix 1 1 1
-                    }
-                }
-            }
-
-
             if { $cgtools::thermo == "DPD" } {
                 thermostat off
                 set dpd_r_cut [setmd max_cut]
@@ -323,6 +352,23 @@ namespace eval cgtools {
 
             mmsg::send $this "run [set kkkkkk] at time=[setmd time]"
 
+
+            # Do the real work of integrating equations of motion
+            mmsg::send $this "starting integration: run $cgtools::hremd_timestep steps"
+            integrate $cgtools::hremd_timestep
+
+            ## get the replica ID in parallel computation
+            set label 0
+            foreach lnow $cgtools::lambda_values {
+                if {$lnow == $initial_lambda} { break }
+                incr label
+            }
+
+            set current_energy [expr [analyze energy total]-[analyze energy kinetic]]
+
+            ::cgtools::utils::append_obs $file_f $current_energy $label
+            ::cgtools::utils::write_histogram $file_h $current_energy        
+            
             # Call all of the analyze routines that we specified when setting up our analysis
             ::cgtools::analysis::do_analysis
 
@@ -343,7 +389,7 @@ namespace eval cgtools {
                 if { $cgtools::use_vmd == "offline" } {
                     ::cgtools::utils::writepdb_charmm \
                         "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
-			$topology -periodbox 1
+            $topology -periodbox 1
                 }
 
                 incr jjjjjj
@@ -363,22 +409,7 @@ namespace eval cgtools {
             }
             #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
 
-            # Do the real work of integrating equations of motion
-            mmsg::send $this "starting integration: run $cgtools::hremd_timestep steps"
-            integrate $cgtools::hremd_timestep
 
-            ## get the replica ID in parallel computation
-            set label 0
-            foreach lnow $cgtools::lambda_values {
-                if {$lnow == $initial_lambda} { break }
-                incr label
-            }
-
-            set current_energy [expr [analyze energy total]-[analyze energy kinetic]]
-
-            ::cgtools::utils::append_obs $file_f $current_energy $label
-            ::cgtools::utils::write_histogram $file_h $current_energy        
-            
             incr kkkkkk
 
             # Set the elapsed CPU time in computation, do not count that used for warm up

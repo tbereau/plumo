@@ -175,6 +175,10 @@ namespace eval ::cgtools {
                     set replica_connect [lindex $argv [expr $k+2]]
                     incr k 2
                 }
+                if {[lindex $argv [expr $k+1]] == "-port" } {
+                    set tcp_port [lindex $argv [expr $k+2]]
+                    incr k 2
+                } 
             } "-hremd" {
                 set hremd 1
                 ::mmsg::send $this "Hamiltonian replica exchange MD turned on"
@@ -206,8 +210,11 @@ namespace eval ::cgtools {
     # ---------------------------------------------------------- #
     # Allow children namespaces that we can explicitly allow messages from these
     ::mmsg::send $this "Assigning namespaces"
-    catch {::mmsg::setnamespaces "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}"}
-    set message_allowlist { :: ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
+    if { [ catch { ::mmsg::setnamespaces \
+        "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}" } errmsf ] } {
+        puts "Warning: $errmsg"
+    }
+    set message_allowlist { :: $this ::cgtools ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
     ::mmsg::send $this "Assigning children namespaces"
     set children [namespace children ::cgtools::analysis]
     foreach child $children {
@@ -222,8 +229,9 @@ namespace eval ::cgtools {
         lappend message_allowlist $child
     }
     # Set the namespaces from which messages will be printed
-    catch { ::mmsg::setnamespaces $message_allowlist }
-
+    if { [ catch { ::mmsg::setnamespaces $message_allowlist } errmsg ] } {
+        puts "Warning: $errmsg"
+    }
 
     # Enable debug messages
     #::mmsg::enable debug
@@ -249,15 +257,55 @@ namespace eval ::cgtools {
         ::mmsg::send $this "Starting parallel tempering at temperatures: $replica_temps"
 
         if {$replica_connect == 0} {
-            parallel_tempering::main -values $replica_temps -rounds $replica_rounds \
-                -init cgtools::espresso::replica_init -swap cgtools::espresso::replica_swap \
-                -perform cgtools::espresso::replica_perform -info comm
-            #		-perform cgtools::espresso::replica_perform -info all 
+            # attempt to run PT 3 times if it catches an error
+            set n_tries 0
+            set max_n_tries 3
+            while { $n_tries <= $max_n_tries } {
+                set file_hn [open "hostfile" w]
+                puts $file_hn "[exec hostname] $tcp_port"
+                close $file_hn
+                ::mmsg::send $this "host [exec hostname], port $tcp_port"
+                if { [ catch { parallel_tempering::main -values $replica_temps -rounds $replica_rounds \
+                    -init cgtools::espresso::replica_init -swap cgtools::espresso::replica_swap \
+                    -perform cgtools::espresso::replica_perform -port $tcp_port -info comm } errmsg ] } {
+                    ::mmsg::send $this $errmsg
+                } else {
+                    break
+                }
+                incr tcp_port
+                incr n_tries
+            }
         } else {
-            parallel_tempering::main -connect $replica_connect -init cgtools::espresso::replica_init \
-                -swap cgtools::espresso::replica_swap \
-                -perform cgtools::espresso::replica_perform -info comm
-            #		-perform cgtools::espresso::replica_perform -info all 
+            # attempt to run PT 3 times if it catches an error
+            set n_tries 0
+            set max_n_tries 3
+            while { $n_tries <= $max_n_tries } {
+                ::mmsg::send $this "Connection attempt [expr $n_tries+1]/[expr $max_n_tries]..."
+                # Attempt to connect 10 seconds after the hostname file has been written
+                set long_enough 0
+                while { $long_enough == 0 } {
+                    if { [file exists hostfile] } {
+                        after 10000
+                        set file_hn [open "hostfile" r]
+                        set data [read $file_hn]
+                        set data [split $data " "]
+                        close $file_hn
+                        set replica_connect [lindex $data 0]
+                        set tcp_port [lindex $data 1]
+                        set long_enough 1
+                    }
+                }
+                ::mmsg::send $this "host [exec hostname], port $tcp_port"
+                if { [catch { parallel_tempering::main -connect $replica_connect \
+                    -init cgtools::espresso::replica_init \
+                    -swap cgtools::espresso::replica_swap \
+                    -perform cgtools::espresso::replica_perform -port $tcp_port -info comm } errmsg ] } {
+                    mmsg::send $this $errmsg
+                } else {
+                    break
+                }
+                incr n_tries
+            }
         }
     } elseif { $hremd != 0 } {
         # HREMD is turned on
@@ -265,13 +313,55 @@ namespace eval ::cgtools {
         catch { exec mkdir -p $ident }
         ::mmsg::send $this "Starting HREMD simulation with coupling lambda:\n  $lambda_values"
         if {$hremd_connect == 0} {
-            parallel_tempering::main -values $lambda_values -rounds $replica_rounds \
-                -init cgtools::espresso::hremd_init -swap cgtools::espresso::hremd_swap \
-                -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm
+            # attempt to run HREMD 3 times if it catches an error
+            set n_tries 0
+            set max_n_tries 3
+            while { $n_tries <= $max_n_tries } {
+                set file_hn [open "hostfile" w]
+                puts $file_hn "[exec hostname] $tcp_port"
+                close $file_hn
+                ::mmsg::send $this "host [exec hostname], port $tcp_port"
+                if { [ catch { parallel_tempering::main -values $lambda_values -rounds $replica_rounds \
+                    -init cgtools::espresso::hremd_init -swap cgtools::espresso::hremd_swap \
+                    -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm } errmsg ] } {
+                    ::mmsg::send $this $errmsg
+                } else {
+                    break
+                }
+                incr tcp_port
+                incr n_tries
+            }
         } else {
-            parallel_tempering::main -connect $hremd_connect -init cgtools::espresso::hremd_init \
-                -swap cgtools::espresso::hremd_swap \
-                -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm
+            # attempt to run PT 3 times if it catches an error
+            set n_tries 0
+            set max_n_tries 3
+            while { $n_tries <= $max_n_tries } {
+                ::mmsg::send $this "Connection attempt [expr $n_tries+1]/[expr $max_n_tries]..."
+                # Attempt to connect 10 seconds after the hostname file has been written
+                set long_enough 0
+                while { $long_enough == 0 } {
+                    if { [file exists hostfile] } {
+                        after 10000
+                        set file_hn [open "hostfile" r]
+                        set data [read $file_hn]
+                        set data [split $data " "]
+                        close $file_hn
+                        set replica_connect [lindex $data 0]
+                        set tcp_port [lindex $data 1]
+                        set long_enough 1
+                    }
+                }
+                ::mmsg::send $this "host [exec hostname], port $tcp_port"
+                if { [catch { parallel_tempering::main -connect $hremd_connect \
+                    -init cgtools::espresso::hremd_init \
+                    -swap cgtools::espresso::hremd_swap \
+                    -perform cgtools::espresso::hremd_perform -port $tcp_port -info comm } errmsg ] } {
+                    mmsg::send $this $errmsg
+                } else {
+                    break
+                }
+                incr n_tries
+            }
         }
     } else {
         # Replica exchange / HREMD is off
