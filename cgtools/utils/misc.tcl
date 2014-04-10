@@ -114,3 +114,12 @@ proc ::cgtools::utils::calc_centersofmass_bymoltype { moltypes topology } {
     }
     return $result
 }
+
+proc ::cgtools::utils::update_midplane_pos { topology } {
+  # Update position of fake particle that monitors membrane midplane.
+  variable ::cgtools::partID_membrane_midplane
+  if { $partID_membrane_midplane > -1 } {
+    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+    part $partID_membrane_midplane pos 1 1 $memcomz
+  }
+}

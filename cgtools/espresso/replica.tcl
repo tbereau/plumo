@@ -438,6 +438,8 @@ namespace eval cgtools {
             }
             #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
             
+            ::cgtools::utils::update_midplane_pos $topology
+
             incr kkkkkk
 
             # Set the elapsed CPU time in computation, do not count that used for warm up

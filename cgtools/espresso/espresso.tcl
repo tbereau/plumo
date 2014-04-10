@@ -84,23 +84,25 @@ namespace eval ::cgtools::espresso {
                         }
                     }
                 }
-                # Don't resume a warmup file
-                if { [string first "warm" $lastFile] == "-1" } {
-                    # Read rough time step from file id
-                    set vmdId [string first $cgtools::ident.vmd $lastFile]
-                    if { $vmdId != -1 } {
-                        set vmdLgth [string length "$cgtools::ident.vmd"]
-                        set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
-                        set startk [expr $initTime + 1]
-                        set startj [expr $initTime + 1]
-                        set mdinit [expr $mdinit + \
-                            ($initTime+1) * $cgtools::int_steps * $cgtools::main_time_step * \
-                                    $cgtools::write_frequency]
+                if { [info exists lastFile] == 1 } { 
+                    # Don't resume a warmup file
+                    if { [string first "warm" $lastFile] == "-1" } {
+                        # Read rough time step from file id
+                        set vmdId [string first $cgtools::ident.vmd $lastFile]
+                        if { $vmdId != -1 } {
+                            set vmdLgth [string length "$cgtools::ident.vmd"]
+                            set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
+                            set startk [expr $initTime + 1]
+                            set startj [expr $initTime + 1]
+                            set mdinit [expr $mdinit + \
+                                ($initTime+1) * $cgtools::int_steps * $cgtools::main_time_step * \
+                                        $cgtools::write_frequency]
+                        }
+                        puts "Resuming simulation from PDB: $lastFile"
+                        puts "init time step $mdinit"
+                        set cgtools::readpdbname $lastFile
+                        set resuming 1
                     }
-                    puts "Resuming simulation from PDB: $lastFile"
-                    puts "init time step $mdinit"
-                    set cgtools::readpdbname $lastFile
-                    set resuming 1
                 }
             }
 
@@ -274,6 +276,9 @@ namespace eval ::cgtools::espresso {
         for {set kkkkkk $startk } { $kkkkkk <  $cgtools::int_n_times } { incr kkkkkk} {
             mmsg::send $this "run $kkkkkk at time=[format %.3f [setmd time]]"
 
+            # Do the real work of integrating equations of motion
+            integrate $cgtools::int_steps
+
             # Call all of the analyze routines that we specified when setting up our analysis
             ::cgtools::analysis::do_analysis
 
@@ -317,6 +322,8 @@ namespace eval ::cgtools::espresso {
                         -periodbox 1 -computecomz 1
                 }
 
+                ::cgtools::utils::update_midplane_pos $topology
+
                 incr jjjjjj
 
                 # # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
@@ -341,8 +348,6 @@ namespace eval ::cgtools::espresso {
             }
             #end of if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 }
 
-            # Do the real work of integrating equations of motion
-            integrate $cgtools::int_steps
             # Set the elapsed CPU time in computation, do not count that used for warm up
             set timingcurr [clock clicks -milliseconds]
             set elapsedtime [expr  $timingcurr - $timingstart]

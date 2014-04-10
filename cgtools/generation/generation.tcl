@@ -212,42 +212,47 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     }
 
   }
-  
-  # HACKED IN. CLEAN UP EVENTUALLY.
-  # If we find two PARTs (ID==2) in the second part of the system and variables 
-  # $::k_umb and ::$d_umb, we turn on umbrella  between the COM of the bilayer 
-  # and each particle automatically.
-  if { [llength $topologieslist] == 2 } {
-    puts "step1"
-    if { [llength [lindex $topologieslist 1]] == 2 } {
-      puts "step2"
-      if { [lindex [lindex [lindex $topologieslist 1] 0] 0] == 2 &&
-        [lindex [lindex [lindex $topologieslist 1] 1] 0] == 2 &&
-        [info exists ::k_umb] == 1 && [info exists ::z0_umb_1] == 1 &&
-        [info exists ::z0_umb_2] == 1 } {
-        # Turn on umbrella between COM of bilayer and each PART.
-        set nlipids [llength [lindex $topologieslist 0]]
-        set nlipid  [expr [llength [lindex [lindex $topologieslist 0] 0]]-1]
-        puts "$nlipids $nlipid"
-        set bead1 [expr $nlipids*$nlipid]
-        set bead2 [expr $nlipids*$nlipid+1]
-        
-        analyze set chains 1 1 [expr $nlipids*$nlipid]
-        set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-        set comzpart [setmd n_part]
-        part $comzpart pos 1 1 $memcomz virtual 1 molecule 0 type 99
-        
-        inter 80 umbrella $::k_umb 2 $::z0_umb_1
-        inter 91 umbrella $::k_umb 2 $::z0_umb_2
-        part $bead1 bond 80 $comzpart
-        part $bead2 bond 81 $comzpart
-        exit
+
+  # Create fake particle that monitors membrane midplane
+  variable ::cgtools::membrane_restraint
+  variable ::cgtools::umbrella_restraints
+  if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
+    variable ::cgtools::partID_membrane_midplane
+    # virtual particle at bilayer midplane
+    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+    set partID_membrane_midplane [setmd n_part]
+    # Put super large mass to affect the temperature calculation minimally
+    part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1 mass 10000
+  }
+
+  if { $umbrella_restraints != "" } {
+    variable ::cgtools::partID_membrane_midplane
+    require_feature UMBRELLA
+    foreach molUmb $umbrella_restraints {
+      set numUmbRes [llength [lindex $molUmb 1]]
+      set counterUmbRes 0
+      for { set j 0 } { $j < $numUmbRes } { incr j } {
+        set counterTop 0
+        set paramUmb [lindex [lindex $molUmb 1] $counterUmbRes]
+        foreach molTop $topology {
+          set molType [lindex $molTop 0]
+          if { $molType == [lindex $molUmb 0] } {
+            if { [lindex $paramUmb 0] == $counterTop } {
+              incr counterUmbRes
+              # Now find an interaction that hasn't yet been set. Start from 80.
+              set interID [::cgtools::utils::maxinterid]
+              inter $interID umbrella [lindex $paramUmb 2] 2 \
+                [lindex $paramUmb 3]
+              part [lindex $molTop [expr 1+[lindex $paramUmb 1]]] bond $interID $partID_membrane_midplane
+            }
+            incr counterTop
+          }
+        }        
       }
     }
   }
-
+  
   # lipid restraints
-  variable ::cgtools::membrane_restraint
   if { $membrane_restraint == 1 } {
     variable ::cgtools::membrane_restraint_k
     variable ::cgtools::membrane_restraint_dist
@@ -263,12 +268,11 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
   # k_res is the force constant of the restraints
   variable topology
+  variable ::cgtools::partID_membrane_midplane
   require_feature UMBRELLA
-  # virtual particle at bilayer midplane
-  set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-  set comzpart [setmd n_part]
-  # Put super large mass to affect the temperature calculation minimally
-  part $comzpart pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1 mass 10000
+  if { $partID_membrane_midplane < 0 } {
+    ::mmsg::err [namespace current] "Applying restraint on membrane without fake particle. Exiting."
+  }
   set glmidplane_z 0.0
   if {$dist < 0.} {
     # Compute average distance of 1st lipid bead to bilayer midplane
@@ -294,9 +298,9 @@ proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
       # Apply constraint on GL bead (type 1+2)
       set lipidBead [lindex $mol 3]
       if {[expr [lindex [part $lipidBead print pos] 2] - $memcomz] > 0.} {
-        part $lipidBead bond 200 $comzpart        
+        part $lipidBead bond 200 $partID_membrane_midplane        
       } else {
-        part $lipidBead bond 201 $comzpart
+        part $lipidBead bond 201 $partID_membrane_midplane
       }
     }
   }

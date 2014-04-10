@@ -187,3 +187,20 @@ proc ::cgtools::utils::listmollengths { topo } {
     }
     return $mollengths
 }
+
+proc ::cgtools::utils::maxinterid { } {
+    # Return lowest unused interaction number. Start at 80.
+    set interID 80
+    set interList [inter]
+    set interExists 1
+    while { $interExists == 1 } {
+        set interExists 0
+        incr interID
+        foreach inter $interList {
+            if { [lindex $inter 0] == $interID } {
+                set interExists 1
+            }
+        }
+    }
+    return $interID
+}

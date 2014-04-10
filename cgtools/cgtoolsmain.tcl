@@ -79,6 +79,11 @@ namespace eval ::cgtools {
     variable pdb_resume ""
     # Multi-timestepping
     variable multitimestep 0
+    # fake particle that monitors the membrane midplane
+    variable partID_membrane_midplane -1
+    # Restraints for umbrella sampling. In the form: {molID {{k z0} {k z0}}}
+    # for restraints on the first two particles of molecule ID $molID.
+    variable umbrella_restraints ""
 
     # Set default system parameters.
     set thermo Langevin
