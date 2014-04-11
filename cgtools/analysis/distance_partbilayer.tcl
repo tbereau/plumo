@@ -7,7 +7,8 @@
 namespace eval ::cgtools::analysis {}
 
 namespace eval ::cgtools::analysis::distance_partbilayer {
-    variable dis_partbilayer
+    variable dist_partbilayer
+    variable dist_partbilayer_i
     variable f_dispb
     namespace export printav_distance_partbilayer
     namespace export setup_distance_partbilayer
@@ -16,16 +17,40 @@ namespace eval ::cgtools::analysis::distance_partbilayer {
 }
 
 proc ::cgtools::analysis::distance_partbilayer::resetav_distance_partbilayer { } {
-    # Do nothing 
+    variable dist_partbilayer
+    variable dist_partbilayer_i
+    variable ::cgtools::virtual_sites
+
+    set dist_partbilayer ""
+    set dist_partbilayer_i 0
+    foreach molVir $virtual_sites {
+        lappend dist_partbilayer 0.0
+    }
 }
 
 proc ::cgtools::analysis::distance_partbilayer::printav_distance_partbilayer { } {
-    # Do nothing
+    global ::cgtools::analysis::time
+    global ::cgtools::analysis::outputdir
+    variable ::cgtools::virtual_sites
+    variable dist_partbilayer
+    variable dist_partbilayer_i
+
+    set f_dispb [open "$outputdir/distance_partbilayer.dat" a]
+    puts -nonewline $f_dispb [format "%15.4f " $time]
+
+    set eleCounter 0
+    foreach molVir $virtual_sites {
+        puts -nonewline $f_dispb [format "%7.4f " [expr [lindex $dist_partbilayer $eleCounter]/$dist_partbilayer_i]]
+        incr eleCounter
+    }
+    puts $f_dispb ""
+    close $f_dispb
 }
 
 proc ::cgtools::analysis::distance_partbilayer::setup_distance_partbilayer { args } {
     global ::cgtools::analysis::outputdir
     global ::cgtools::analysis::iotype
+    variable ::cgtools::virtual_sites
     variable f_dispb
 
     if { [file exists "$outputdir/distance_partbilayer.dat"] } {
@@ -35,9 +60,15 @@ proc ::cgtools::analysis::distance_partbilayer::setup_distance_partbilayer { arg
     }
     set f_dispb [open "$outputdir/distance_partbilayer.dat" $iotype]
     if { $newfile || $iotype == "w"} {
-        puts $f_dispb "\#distance_part1bilayer distance_part2bilayer"
+        puts -nonewline $f_dispb "\# Time "
+        foreach i $virtual_sites {
+            puts -nonewline $f_dispb "distance(particule-bilayer) "
+        }
+        puts $f_dispb ""
     }
     close $f_dispb
+
+    resetav_distance_partbilayer
     
 }
 
@@ -45,42 +76,25 @@ proc ::cgtools::analysis::distance_partbilayer::analyze_distance_partbilayer { }
     variable ::cgtools::analysis::topology
     global ::cgtools::analysis::outputdir
     global ::cgtools::analysis::iotype
+    variable dist_partbilayer
+    variable dist_partbilayer_i
+    variable ::cgtools::virtual_sites
+    variable ::cgtools::partID_membrane_midplane
     variable f_dispb
 
-    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-    set ibead 0
-    foreach mol $topology {
-        set moltype [lindex $mol 0]
-        set typeinfo [::cgtools::utils::matchtype $moltype]
-        set molname [lindex $typeinfo 1]
-        if {$molname == "PART"} { 
-            set partbondlists [lindex $typeinfo 2]
-            set partbondtypelists [lindex $typeinfo 3]
-            set partbondcharmmlists [lindex $typeinfo 4]
-            
-            #set and write particle list
-            set beadlists [lindex $partbondlists 0]
-            set nbeads [llength $beadlists]
-            set beadcharmmlists [lindex $partbondcharmmlists 0]
-            for { set b 0 } { $b < $nbeads } {incr b } {
-        	set partnum [lindex $mol [ expr $b + 1] ]
-	        #puts "partnum= $partnum"
-    		set posvec [part $partnum print pos]
-    		set posz [lindex $posvec 2]
-    		set distance [expr abs($posz - $memcomz) ]
-    		if {$ibead == 0} {
-                set dis_partbilayer $distance
-    		} else {
-                lappend dis_partbilayer $distance
-    		}
-    		incr ibead		
-            }
-        } 
-    } 
-    set f_dispb [open "$outputdir/distance_partbilayer.dat" a]
-    puts $f_dispb "$dis_partbilayer"
-    close $f_dispb
+    if { [llength $virtual_sites] == 0 } { return 0 }
 
-    return $dis_partbilayer
+    set memcomz [lindex [part $partID_membrane_midplane print pos] 2]
+    # Update fake particle position
+    part $partID_membrane_midplane pos 1 1 $memcomz
+    set eleCounter 0
+    foreach molVir $virtual_sites {
+        set posz [lindex [part [lindex $molVir 1] print pos] 2]
+        lset dist_partbilayer $eleCounter [expr [lindex $dist_partbilayer $eleCounter]+abs($posz - $memcomz)]
+        incr eleCounter
+    }
+    incr dist_partbilayer_i
+
+    return
 }
 

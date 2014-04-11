@@ -108,7 +108,7 @@ proc ::cgtools::generation::place_lipid { mol partlist } {
         set posy [lindex $curpos 1]
         set posz [lindex $curpos 2]
         
-        part $partnum pos $posx $posy $posz type $parttype mass $partmass 
+        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol 0
     }
 
     #bonds
@@ -243,7 +243,7 @@ proc ::cgtools::generation::place_part { mol partlist } {
         set posy [lindex $curpos 1]
         set posz [lindex $curpos 2]
         
-        part $partnum pos $posx $posy $posz type $parttype mass $partmass
+        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol 2
         #puts "part $partnum pos $posx $posy $posz type $parttype mass $partmass"
         #exit
     }

@@ -89,6 +89,11 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   # Current particle id
   set currpid $startp
 
+  # Virtual sites
+  variable ::cgtools::membrane_restraint
+  variable ::cgtools::umbrella_restraints
+  variable ::cgtools::virtual_sites
+
 
   foreach spec $system_specs {
     variable ::cgtools::moltypelists
@@ -127,7 +132,9 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     if { !$n_molslistset } {
       mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
     }
+
     if { [lindex [lindex $n_molslist 0] 0] == "1" } {
+      # It's a peptide
       if { !$sequenceset } {
         mmsg::err [namespace current] "Missing sequence for peptide"
       } else {
@@ -156,7 +163,6 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
         lappend topolist $topo
         set currpid [expr [::cgtools::utils::maxpartid $topo ] + 1]
       }
-
     }
 
     # Join all of the previously made topologies
@@ -213,52 +219,45 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
   }
 
-  # Create fake particle that monitors membrane midplane
-  variable ::cgtools::membrane_restraint
-  variable ::cgtools::umbrella_restraints
-  if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
-    variable ::cgtools::partID_membrane_midplane
-    # virtual particle at bilayer midplane
-    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-    set partID_membrane_midplane [setmd n_part]
-    # Put super large mass to affect the temperature calculation minimally
-    part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 molecule 0 type 99 fix 1 1 1 mass 10000
-  }
 
-  if { $umbrella_restraints != "" } {
-    variable ::cgtools::partID_membrane_midplane
-    require_feature UMBRELLA
-    foreach molUmb $umbrella_restraints {
-      set numUmbRes [llength [lindex $molUmb 1]]
-      set counterUmbRes 0
-      for { set j 0 } { $j < $numUmbRes } { incr j } {
-        set counterTop 0
-        set paramUmb [lindex [lindex $molUmb 1] $counterUmbRes]
-        foreach molTop $topology {
-          set molType [lindex $molTop 0]
-          if { $molType == [lindex $molUmb 0] } {
-            if { [lindex $paramUmb 0] == $counterTop } {
-              incr counterUmbRes
-              # Now find an interaction that hasn't yet been set. Start from 80.
-              set interID [::cgtools::utils::maxinterid]
-              inter $interID umbrella [lindex $paramUmb 2] 2 \
-                [lindex $paramUmb 3]
-              part [lindex $molTop [expr 1+[lindex $paramUmb 1]]] bond $interID $partID_membrane_midplane
-            }
-            incr counterTop
-          }
-        }        
+    # It's a lipid membrane -- optionally set virtual site on entire membrane.
+    if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
+      variable ::cgtools::partID_membrane_midplane
+      # virtual particle at bilayer midplane
+      set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+      set partID_membrane_midplane [setmd n_part]
+      # Put super large mass to affect the temperature calculation minimally
+      part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 mol 0 type 99 fix 1 1 1 mass 10000
+      # part $partID_membrane_midplane pos 1 1 $memcomz virtual 1 mol 0 type 99
+      incr currpid
+    }
+    # lipid restraints
+    if { $membrane_restraint == 1 } {
+      variable ::cgtools::membrane_restraint_k
+      variable ::cgtools::membrane_restraint_dist
+      lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
+    }
+  # Optionally apply umbrella-sampling restraints
+  foreach molUmb $umbrella_restraints {
+    if { [lindex $molUmb 0] == [lindex [lindex $n_molslist 0] 0] } {
+      foreach molIDUmb [lindex $molUmb 1] {
+        puts "molIDUmb $molIDUmb"
+        set interID [::cgtools::utils::maxinterid]
+        # umbrella potential along z
+        inter $interID umbrella [lindex $molIDUmb 1] 2 [lindex $molIDUmb 2]
+        # Guess position of the molecule from its first atom.
+        set posi [part [expr $currpid-$nbeads_mol] print pos]
+        set moli [part [expr $currpid-$nbeads_mol] print mol]
+        set numpart [setmd n_part]
+        part $numpart pos [lindex $posi 0] [lindex $posi 1] [lindex $posi 2] type 99 \
+          mol $moli virtual 1 bond $interID $partID_membrane_midplane
+        ::mmsg::send [namespace current] "Virtual site $numpart"
+        lappend virtual_sites "[lindex $molUmb 0] $numpart"
+        incr currpid
       }
     }
   }
-  
-  # lipid restraints
-  if { $membrane_restraint == 1 } {
-    variable ::cgtools::membrane_restraint_k
-    variable ::cgtools::membrane_restraint_dist
-    lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
-  }
-
+ 
   #puts "topology= $topology"
   set topology [sort_topo $topology]
   return $topology

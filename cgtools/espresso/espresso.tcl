@@ -267,17 +267,28 @@ namespace eval ::cgtools::espresso {
             # Warm up NPT
             #     ::mmsg::send $this "warming up NPT"
             #     ::cgtools::utils::nptwarmup $cgtools::free_warmsteps $cgtools::free_warmtimes \
-                #         [list $cgtools::p_ext [expr $cgtools::piston_mass*10] $cgtools::gamma_0 [expr $cgtools::gamma_v*.1]] \
-                #         [list $cgtools::p_ext $cgtools::piston_mass $cgtools::gamma_0 $cgtools::gamma_v] $topology \
-                #         -cfgs $cgtools::warmup_freq -outputdir $cgtools::outputdir
+            #         [list $cgtools::p_ext [expr $cgtools::piston_mass*10] $cgtools::gamma_0 [expr $cgtools::gamma_v*.1]] \
+            #         [list $cgtools::p_ext $cgtools::piston_mass $cgtools::gamma_0 $cgtools::gamma_v] $topology \
+            #         -cfgs $cgtools::warmup_freq -outputdir $cgtools::outputdir
         }
 
         set timingstart [clock clicks -milliseconds]
         for {set kkkkkk $startk } { $kkkkkk <  $cgtools::int_n_times } { incr kkkkkk} {
             mmsg::send $this "run $kkkkkk at time=[format %.3f [setmd time]]"
 
+            set oldtopo $topology
+            eval analyze set [::cgtools::utils::topoforvirtualsites $topology]
+            puts [part 1188 print pos]
+            integrate 0
+            puts [part 1188 print pos]
+            
+
             # Do the real work of integrating equations of motion
             integrate $cgtools::int_steps
+
+
+            set topology $oldtopo
+            eval analyze set $topology 
 
             # Call all of the analyze routines that we specified when setting up our analysis
             ::cgtools::analysis::do_analysis

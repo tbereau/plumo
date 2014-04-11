@@ -84,6 +84,8 @@ namespace eval ::cgtools {
     # Restraints for umbrella sampling. In the form: {molID {{k z0} {k z0}}}
     # for restraints on the first two particles of molecule ID $molID.
     variable umbrella_restraints ""
+    # Store all virtual sites
+    variable virtual_sites ""
 
     # Set default system parameters.
     set thermo Langevin
