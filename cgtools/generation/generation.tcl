@@ -197,7 +197,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     if {!$notopo} {
       lappend topologieslist $topology
     }
-    #puts "topology: $topology"
+    # puts "topology: $topology"
 
   }
 
@@ -273,6 +273,7 @@ proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
   if { $partID_membrane_midplane < 0 } {
     ::mmsg::err [namespace current] "Applying restraint on membrane without fake particle. Exiting."
   }
+  set memcomz [lindex [part $partID_membrane_midplane print pos] 2]
   set glmidplane_z 0.0
   if {$dist < 0.} {
     # Compute average distance of 1st lipid bead to bilayer midplane
