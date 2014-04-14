@@ -28,9 +28,7 @@ namespace eval ::cgtools::generation {
   variable userfixedparts
   variable interbead
 
-  ### temporary
-  variable count_proteins 0
-  #####
+  variable molIdx 0
 
   # Read in all the routines
   # Files with separate namespaces corresponding to geometries
@@ -97,6 +95,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
   foreach spec $system_specs {
     variable ::cgtools::moltypelists
+    variable molIdx
     #puts "::cgtools::generation::generate_system::spec = $spec"
     # Flags for tracking input settings
     set geometryset 0
@@ -162,6 +161,9 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       } else {
         lappend topolist $topo
         set currpid [expr [::cgtools::utils::maxpartid $topo ] + 1]
+      }
+      if { $thismoltypeid == "0" } {
+        incr molIdx
       }
     }
 
@@ -241,13 +243,17 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   foreach molUmb $umbrella_restraints {
     if { [lindex $molUmb 0] == [lindex [lindex $n_molslist 0] 0] } {
       foreach molIDUmb [lindex $molUmb 1] {
-        puts "molIDUmb $molIDUmb"
         set interID [::cgtools::utils::maxinterid]
         # umbrella potential along z
         inter $interID umbrella [lindex $molIDUmb 1] 2 [lindex $molIDUmb 2]
-        # Guess position of the molecule from its first atom.
-        set posi [part [expr $currpid-$nbeads_mol] print pos]
+        # Determine position of virtual site from center of mass of mol.
+        set posi "0.0 0.0 0.0"
+        for {set j [expr $currpid-$nbeads_mol]} {$j < $currpid} {incr j} {
+          set posi [::cgtools::utils::add2vec $posi [part $j print pos]]
+        }
+        set posi [::cgtools::utils::scalevec $posi [expr 1./$nbeads_mol]]
         set moli [part [expr $currpid-$nbeads_mol] print mol]
+        set moli 72
         set numpart [setmd n_part]
         part $numpart pos [lindex $posi 0] [lindex $posi 1] [lindex $posi 2] type 99 \
           mol $moli virtual 1 bond $interID $partID_membrane_midplane

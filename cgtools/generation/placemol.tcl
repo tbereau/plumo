@@ -81,6 +81,7 @@ proc ::cgtools::generation::placemol { mol partlist args } {
 # partlist : list of particle information of the atoms 
 # Note that both linkbond and bendbond will have previously been set by set_bonded_interactions
 proc ::cgtools::generation::place_lipid { mol partlist } {
+    variable molIdx
 
     set moltype [lindex $mol 0]
     set typeinfo [::cgtools::utils::matchtype $moltype]
@@ -108,7 +109,7 @@ proc ::cgtools::generation::place_lipid { mol partlist } {
         set posy [lindex $curpos 1]
         set posz [lindex $curpos 2]
         
-        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol 0
+        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol $molIdx
     }
 
     #bonds
@@ -211,6 +212,7 @@ proc ::cgtools::generation::place_posmoverotation {partlist move rotate} {
 # partlist : list of particle information of the atoms 
 # Note that both linkbond and bendbond will have previously been set by set_bonded_interactions
 proc ::cgtools::generation::place_part { mol partlist } {
+    variable molIdx
     set moltype [lindex $mol 0]
     set typeinfo [::cgtools::utils::matchtype $moltype]
     #puts "typeinfo= $typeinfo"
@@ -243,7 +245,8 @@ proc ::cgtools::generation::place_part { mol partlist } {
         set posy [lindex $curpos 1]
         set posz [lindex $curpos 2]
         
-        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol 2
+        part $partnum pos $posx $posy $posz type $parttype mass $partmass mol $molIdx
+        incr molIdx
         #puts "part $partnum pos $posx $posy $posz type $parttype mass $partmass"
         #exit
     }
@@ -251,7 +254,7 @@ proc ::cgtools::generation::place_part { mol partlist } {
 
 # Place particles that belong to a protein
 proc ::cgtools::generation::place_protein { mol partlist } {
-    variable count_proteins
+    variable molIdx
     set this [namespace current]
 
     incr count_proteins
@@ -305,10 +308,11 @@ proc ::cgtools::generation::place_protein { mol partlist } {
             set mts " smaller_timestep $multitimestep"
         }
         set part_cmd "part $partnum pos $posx $posy $posz type $parttype \
-            mass $partmass fix 1 1 1 mol $count_proteins"
+            mass $partmass fix 1 1 1 mol $molIdx"
         append part_cmd $mts
         eval $part_cmd
     }
+    incr molIdx
     ::mmsg::send $this "Assigned positions to protein (ID: [lindex $mol 0])"
 
     #bonds
