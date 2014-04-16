@@ -140,8 +140,11 @@ namespace eval ::cgtools::espresso {
             set topology [::cgtools::generation::generate_system $cgtools::system_specs $cgtools::setbox_l]
             #puts "topology= $topology"
             # Set the generated topology into the internals of espresso.
+
             ::cgtools::utils::set_topology $topology
             
+           
+
             # See if there is any fixed molecules 
             set cgtools::trappedmols [::cgtools::generation::get_trappedmols]
             if { $resuming == 0 } {
@@ -159,7 +162,6 @@ namespace eval ::cgtools::espresso {
 
             setmd skin      $cgtools::verlet_skin
 
-
             # ----------- Integration Parameters before warmup -----------#
             # Set the topology and molecule information
             #----------------------------------------------------------#
@@ -173,6 +175,7 @@ namespace eval ::cgtools::espresso {
                 $topology -extracommands $cgtools::vmdcommands
             
             puts [part [expr [setmd n_part]-1] print pos fix]
+
 
             #Perform the warm up integration
             #----------------------------------------------------------#

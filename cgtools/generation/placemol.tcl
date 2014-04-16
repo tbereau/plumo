@@ -246,7 +246,6 @@ proc ::cgtools::generation::place_part { mol partlist } {
         set posz [lindex $curpos 2]
         
         part $partnum pos $posx $posy $posz type $parttype mass $partmass mol $molIdx
-        incr molIdx
         #puts "part $partnum pos $posx $posy $posz type $parttype mass $partmass"
         #exit
     }
@@ -256,6 +255,8 @@ proc ::cgtools::generation::place_part { mol partlist } {
 proc ::cgtools::generation::place_protein { mol partlist } {
     variable molIdx
     set this [namespace current]
+
+    puts "molidx prot $molIdx"
 
     incr count_proteins
 
@@ -312,7 +313,6 @@ proc ::cgtools::generation::place_protein { mol partlist } {
         append part_cmd $mts
         eval $part_cmd
     }
-    incr molIdx
     ::mmsg::send $this "Assigned positions to protein (ID: [lindex $mol 0])"
 
     #bonds

@@ -225,7 +225,7 @@ proc ::cgtools::utils::read_topology { file } {
 #
 proc ::cgtools::utils::set_topology { topo } {
     eval analyze set $topo
-    analyze set "topo_part_sync"
+    analyze set "topo_part_sync"    
 }
 
 

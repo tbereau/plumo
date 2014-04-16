@@ -28,7 +28,7 @@ namespace eval ::cgtools::generation {
   variable userfixedparts
   variable interbead
 
-  variable molIdx 0
+  variable molIdx -1
 
   # Read in all the routines
   # Files with separate namespaces corresponding to geometries
@@ -167,6 +167,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       }
     }
 
+    
     # Join all of the previously made topologies
     set first 1
     foreach topo $topolist {
@@ -201,6 +202,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     if { [catch  {eval $createcommand -readfile $geometryreadfile} errm ] } {
       mmsg::err [namespace current] "couldn't execute creation command for $command \n $errm"
     }
+    incr molIdx
 
     if {!$notopo} {
       lappend topologieslist $topology
@@ -209,36 +211,24 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
   }
 
-  # Join all of the previously made topologies
-  set first 1
-  foreach topo $topologieslist {
-    if { $first } { 
-      set topology $topo 
-      set first 0
-    } else {
-      set topology [join_topos $topology $topo]
-    }
-
+  # It's a lipid membrane -- optionally set virtual site on entire membrane.
+  if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
+    variable ::cgtools::partID_membrane_midplane
+    # virtual particle at bilayer midplane
+    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+    set partID_membrane_midplane [setmd n_part]
+    # Put super large mass to affect the temperature calculation minimally
+    part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 mol 0 type 99 fix 1 1 1 mass 10000
+    ::mmsg::send [namespace current] [format "Bilayer midplane height: %7.2f" $memcomz]
+    # part $partID_membrane_midplane pos 1 1 $memcomz virtual 1 mol 0 type 99
+    incr currpid
   }
-
-
-    # It's a lipid membrane -- optionally set virtual site on entire membrane.
-    if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
-      variable ::cgtools::partID_membrane_midplane
-      # virtual particle at bilayer midplane
-      set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-      set partID_membrane_midplane [setmd n_part]
-      # Put super large mass to affect the temperature calculation minimally
-      part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 mol 0 type 99 fix 1 1 1 mass 10000
-      # part $partID_membrane_midplane pos 1 1 $memcomz virtual 1 mol 0 type 99
-      incr currpid
-    }
-    # lipid restraints
-    if { $membrane_restraint == 1 } {
-      variable ::cgtools::membrane_restraint_k
-      variable ::cgtools::membrane_restraint_dist
-      lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
-    }
+  # lipid restraints
+  if { $membrane_restraint == 1 } {
+    variable ::cgtools::membrane_restraint_k
+    variable ::cgtools::membrane_restraint_dist
+    lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
+  }
   # Optionally apply umbrella-sampling restraints
   foreach molUmb $umbrella_restraints {
     if { [lindex $molUmb 0] == [lindex [lindex $n_molslist 0] 0] } {
@@ -253,18 +243,39 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
         }
         set posi [::cgtools::utils::scalevec $posi [expr 1./$nbeads_mol]]
         set moli [part [expr $currpid-$nbeads_mol] print mol]
-        set moli 72
         set numpart [setmd n_part]
         part $numpart pos [lindex $posi 0] [lindex $posi 1] [lindex $posi 2] type 99 \
           mol $moli virtual 1 bond $interID $partID_membrane_midplane
+        lappend virtual_sites $numpart
         ::mmsg::send [namespace current] "Virtual site $numpart"
-        lappend virtual_sites "[lindex $molUmb 0] $numpart"
+        # Add virtual site to topology
+        for {set j 0 } { $j < [llength $topologieslist]} {incr j} {
+          set topo [lindex $topologieslist $j]
+          if { [lindex [lindex $topo 0] 0] == [lindex $molUmb 0] } {
+            lset topologieslist $j 0 end+1 $numpart
+          }
+        }
         incr currpid
       }
     }
   }
+
+  # Join all of the previously made topologies
+  set first 1
+  foreach topo $topologieslist {
+    if { $first } { 
+      set topology $topo
+      set first 0
+    } else {
+      set topology [join_topos $topology $topo]
+    }
+
+  }
+
+
+
  
-  #puts "topology= $topology"
+  # puts "topology= $topology"
   set topology [sort_topo $topology]
   return $topology
 

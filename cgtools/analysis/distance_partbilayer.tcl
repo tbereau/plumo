@@ -89,13 +89,14 @@ proc ::cgtools::analysis::distance_partbilayer::analyze_distance_partbilayer { }
     # Update fake particle position
     part $partID_membrane_midplane pos 1 1 $memcomz
     set eleCounter 0
+
     foreach molVir $virtual_sites {
-        set posVirSit [part [lindex $molVir 1] print pos]
+        set posVirSit [part $molVir print pos]
         set posz [lindex $posVirSit 2]
         lset dist_partbilayer $eleCounter [expr [lindex $dist_partbilayer $eleCounter]+abs($posz - $memcomz)]
         # Check that the virtual site is close to the center of mass of the
         # molecule. Otherwise exit (parallelization issue).
-        set molid [part [lindex $molVir 1] print mol]
+        set molid [part $molVir print mol]
         set posCoM "0.0 0.0 0.0"
         set comIdx 0
         for {set j 0} {$j < [setmd n_part]} {incr j} {

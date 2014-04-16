@@ -79,6 +79,8 @@ proc ::cgtools::utils::warmup { steps times topology args } {
         # catch tabulated force cap error in case tabulated option is not turned on
         # New: tabforcecap and ljforcecap deprecated.
         inter forcecap $cap
+        
+
         integrate $steps
         set cap [expr $cap + $capincr ]
         ::mmsg::send [namespace current]  "run $i of $times at time=[format %.3f [setmd time]] (cap=[format %.3f $cap]) " 
