@@ -211,24 +211,6 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
 
   }
 
-  # It's a lipid membrane -- optionally set virtual site on entire membrane.
-  if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
-    variable ::cgtools::partID_membrane_midplane
-    # virtual particle at bilayer midplane
-    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
-    set partID_membrane_midplane [setmd n_part]
-    # Put super large mass to affect the temperature calculation minimally
-    part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 mol 0 type 99 fix 1 1 1 mass 10000
-    ::mmsg::send [namespace current] [format "Bilayer midplane height: %7.2f" $memcomz]
-    # part $partID_membrane_midplane pos 1 1 $memcomz virtual 1 mol 0 type 99
-    incr currpid
-  }
-  # lipid restraints
-  if { $membrane_restraint == 1 } {
-    variable ::cgtools::membrane_restraint_k
-    variable ::cgtools::membrane_restraint_dist
-    lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
-  }
   # Optionally apply umbrella-sampling restraints
   foreach molUmb $umbrella_restraints {
     if { [lindex $molUmb 0] == [lindex [lindex $n_molslist 0] 0] } {
@@ -252,7 +234,9 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
         for {set j 0 } { $j < [llength $topologieslist]} {incr j} {
           set topo [lindex $topologieslist $j]
           if { [lindex [lindex $topo 0] 0] == [lindex $molUmb 0] } {
-            lset topologieslist $j 0 end+1 $numpart
+            set tmplst [lindex [lindex $topologieslist $j] 0]
+            lappend tmplst $numpart
+            lset topologieslist $j 0 $tmplst
           }
         }
         incr currpid
@@ -273,6 +257,24 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   }
 
 
+  # It's a lipid membrane -- optionally set virtual site on entire membrane.
+  if { $membrane_restraint == 1 || $umbrella_restraints != "" } {
+    variable ::cgtools::partID_membrane_midplane
+    # virtual particle at bilayer midplane
+    set memcomz [::cgtools::utils::compute_membrane_comz $topology]
+    set partID_membrane_midplane [setmd n_part]
+    # Put super large mass to affect the temperature calculation minimally
+    part $partID_membrane_midplane pos 1 1 $memcomz virtual 0 mol 0 type 99 fix 1 1 1 mass 10000
+    ::mmsg::send [namespace current] [format "Bilayer midplane height: %7.2f" $memcomz]
+    # part $partID_membrane_midplane pos 1 1 $memcomz virtual 1 mol 0 type 99
+    incr currpid
+  }
+  # lipid restraints
+  if { $membrane_restraint == 1 } {
+    variable ::cgtools::membrane_restraint_k
+    variable ::cgtools::membrane_restraint_dist
+    lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
+  }
 
  
   # puts "topology= $topology"
