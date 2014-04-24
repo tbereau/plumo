@@ -86,6 +86,8 @@ namespace eval ::cgtools {
     variable umbrella_restraints ""
     # Store all virtual sites
     variable virtual_sites ""
+    # Peptide's temperature
+    variable temp_peptide -1.
 
     # Set default system parameters.
     set thermo Langevin

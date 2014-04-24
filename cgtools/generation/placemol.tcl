@@ -254,6 +254,8 @@ proc ::cgtools::generation::place_part { mol partlist } {
 # Place particles that belong to a protein
 proc ::cgtools::generation::place_protein { mol partlist } {
     variable molIdx
+    variable peptide_parts
+    variable ::cgtools::temp_peptide
     set this [namespace current]
 
     puts "molidx prot $molIdx"
@@ -308,10 +310,17 @@ proc ::cgtools::generation::place_protein { mol partlist } {
         if { $multitimestep > 0} {
             set mts " smaller_timestep $multitimestep"
         }
+        set therm ""
+        if { $temp_peptide > 0. } {
+            require_feature LANGEVIN_PER_PARTICLE
+            set therm " temp $temp_peptide"
+        }
         set part_cmd "part $partnum pos $posx $posy $posz type $parttype \
             mass $partmass fix 1 1 1 mol $molIdx"
         append part_cmd $mts
+        append part_cmd $therm
         eval $part_cmd
+        lappend peptide_parts $partnum
     }
     ::mmsg::send $this "Assigned positions to protein (ID: [lindex $mol 0])"
 

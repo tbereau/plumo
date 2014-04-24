@@ -43,7 +43,10 @@ namespace eval cgtools {
             variable prev_temp $temp
             variable checkpointexists
             variable folder
-            
+
+            variable ::cgtools::temp_peptide
+            variable ::cgtools::generation::peptide_parts            
+
             set this [namespace current]
             mmsg::send $this "Starting replica exchange instance at temperature $temp"
 
@@ -75,8 +78,8 @@ namespace eval cgtools {
                     variable ::cgtools::pdb_resume
                     # Resuming old simulation. Look for latest PDB file
                     set tclfiles [glob -nocomplain -directory $folder *.pdb]
+                    set lastFile ""
                     if { [llength $tclfiles] > 0} {
-                        set lastFile ""
                         set lastDate "000000000"
                         foreach f $tclfiles {
                             set fdate [file mtime $f]
@@ -211,17 +214,29 @@ namespace eval cgtools {
                     }
                 }
 
-                # set exclustions for the bonded particles 1: 2-bodyinteraction  2: 3-body interaction
+                # set exclusions for the bonded particles 1: 2-bodyinteraction  2: 3-body interaction
                 part auto_exclusions 1
                 
                 #Initialise Random Number Generator
                 ::cgtools::utils::init_random $cgtools::nprocessors
 
+
+
                 # ----------- Integration Parameters before warmup -----------#
                 setmd periodic 1 1 1
                 setmd time_step $cgtools::warm_time_step
                 setmd skin      $cgtools::verlet_skin
-                thermostat langevin $temp $cgtools::langevin_gamma
+                if { $temp_peptide > 0. } {
+                    # Set all peptide particles at temperature $temp
+                    for {set i 0} {$i < [llength $peptide_parts]} {incr i} {
+                        part [lindex $peptide_parts $i] temp $temp
+                    }
+                    # The rest of the system is at $systemtemp
+                    thermostat langevin $cgtools::systemtemp $cgtools::langevin_gamma
+                } else {
+                    thermostat langevin $temp $cgtools::langevin_gamma    
+                }
+                
                 
                 # Set the topology and molecule information
                 #----------------------------------------------------------#
@@ -329,6 +344,9 @@ namespace eval cgtools {
             variable initial_temp
             variable prev_temp
 
+            variable ::cgtools::temp_peptide
+            variable ::cgtools::generation::peptide_parts
+
             ### ONly necessary if each instance handles more than one configuration, 
             ### e.g. 300 temperatures in 10 parallel processers
             #global config
@@ -345,16 +363,31 @@ namespace eval cgtools {
 
             # ----------- Integration Parameters after warmup -----------#
             setmd time_step $cgtools::main_time_step
-            thermostat langevin $temp $cgtools::langevin_gamma
+            if { $temp_peptide > 0. } {
+                # Set all peptide particles at temperature $temp
+                for {set i 0} {$i < [llength $peptide_parts]} {incr i} {
+                    part [lindex $peptide_parts $i] temp $temp
+                }
+                thermostat langevin $cgtools::systemtemp $cgtools::langevin_gamma
+            } else {            
+                thermostat langevin $temp $cgtools::langevin_gamma
+            }
 
             # Rescale velocities
+
             global ::cgtools::analysis::n_particles
             set facvec [expr sqrt($temp/$prev_temp)]
             for { set part_no 0 } {$part_no < $n_particles } { incr part_no } {
-                set partvel [::cgtools::utils::scalevec [part $part_no print v] $facvec]
-                part $part_no v [lindex $partvel 0] [lindex $partvel 1] [lindex $partvel 2]
+                if { ($temp_peptide > 0. && [lsearch $peptide_parts $part_no] != -1) || \
+                    $temp_peptide < 0.} {
+                    set partvel [::cgtools::utils::scalevec [part $part_no print v] $facvec]
+                    part $part_no v [lindex $partvel 0] [lindex $partvel 1] [lindex $partvel 2]
+                }
             }
             set prev_temp $temp
+
+
+
 
             variable ::cgtools::implicit_membrane
             if { $::cgtools::implicit_membrane == 1 } {
@@ -376,7 +409,11 @@ namespace eval cgtools {
             if { $cgtools::thermo == "DPD" } {
                 thermostat off
                 set dpd_r_cut [setmd max_cut]
-                thermostat set dpd $temp $cgtools::dpd_gamma $dpd_r_cut
+                if { $temp_peptide > 0. } {
+                    thermostat set dpd $cgtools::systemtemp $cgtools::dpd_gamma $dpd_r_cut    
+                } else {
+                    thermostat set dpd $temp $cgtools::dpd_gamma $dpd_r_cut
+                }
                 mmsg::send $this "DPD thermostat has been set"
                 mmsg::send $this "Thermostat is: [thermostat]"
             }
@@ -390,7 +427,11 @@ namespace eval cgtools {
                     mmsg::send $this "npt integrator has been set"
                     flush stdout
                     #-cubic_box
-                    thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v                    
+                    if { $temp_peptide > 0. } {
+                        thermostat set npt_isotropic $cgtools::systemtemp  $cgtools::gamma_0  $cgtools::gamma_v
+                    } else {
+                        thermostat set npt_isotropic $temp  $cgtools::gamma_0  $cgtools::gamma_v                    
+                    }
                 }
             }
 

@@ -29,6 +29,7 @@ namespace eval ::cgtools::generation {
   variable interbead
 
   variable molIdx -1
+  variable peptide_parts []
 
   # Read in all the routines
   # Files with separate namespaces corresponding to geometries
