@@ -66,7 +66,7 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
  		if { $beadname != $beadname_right } {
 				#puts "beadname: $beadname"
 				#puts "beadname_right: $beadname_right"
-        			::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber"
+        			::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber ($beadname vs $beadname_right)"
  		}
 		set posvec [list $posx $posy $posz]
 		set curpart [list $atomNumber $posvec $beadtype $beadname $moltype $molNumber] 
@@ -138,7 +138,7 @@ proc ::cgtools::generation::placeparticles_template { readfile } {
 	set beadname_right [lindex [lindex $beadtypelists [expr $beadtype - $itype_begin ] ] 1]
 
         if { $beadname != $beadname_right } {
-            ::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber"
+            ::mmsg::warn [namespace current]  "sequence of the particles is wrong in $readfile: line $atomNumber ($beadname vs $beadname_right)"
         }
         set posvec [list $posx $posy $posz]
         set curpart [list $atomNumber $posvec $beadtype $beadname $moltype $molNumber] 
