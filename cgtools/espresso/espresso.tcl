@@ -279,7 +279,6 @@ namespace eval ::cgtools::espresso {
         for {set kkkkkk $startk } { $kkkkkk <  $cgtools::int_n_times } { incr kkkkkk} {
             mmsg::send $this "run $kkkkkk at time=[format %.3f [setmd time]]"
 
-
             # Do the real work of integrating equations of motion
             integrate $cgtools::int_steps
             
