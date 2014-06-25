@@ -285,28 +285,33 @@ namespace eval ::cgtools::espresso {
             # Call all of the analyze routines that we specified when setting up our analysis
             ::cgtools::analysis::do_analysis
 
+            if { [setmd time] > $cgtools::fix_time } {
+                # If the membrane have any fixed particles, unfix them after warmup
+                set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
+                for {set i 0} { $i <  [setmd n_part] } {incr i} {
+                    if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
+                        if { (([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
+                            $::cgtools::implicit_membrane == 0) && [part $i print virtual] == 0} {
+                            part [expr $i] fix 0 0 0
+                        }
+                    }
+                }
+                # FIX LATER
+                setmd time_step $cgtools::main_time_step      
+            }
+
             # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
             if { [expr $kkkkkk + 1] % $cgtools::analysis_write_frequency ==0 } {
                 ::cgtools::analysis::print_averages
                 #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
             }
 
+            set cfgt [analyze configtemp]
+            puts "cfgtmp [setmd time] [expr -1.*[lindex $cfgt 0]/(0.00000001+[lindex $cfgt 1])]"
+
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 } {
-                if { [setmd time] > $cgtools::fix_time } {
-                    # If the membrane have any fixed particles, unfix them after warmup
-                    set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
-                    for {set i 0} { $i <  [setmd n_part] } {incr i} {
-                        if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
-                            if { (([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
-                                $::cgtools::implicit_membrane == 0) && [part $i print virtual] == 0} {
-                                part [expr $i] fix 0 0 0
-                            }
-                        }
-                    }
-                    # FIX LATER
-                    setmd time_step $cgtools::main_time_step      
-                }
+
                 
 
                 # polyBlockWrite "$cgtools::outputdir/$cgtools::ident.[format %04d $jjjjjj].out" \

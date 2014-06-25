@@ -140,9 +140,6 @@ namespace eval ::cgtools {
         ::mmsg::send $this "Turning on multi-timestepping algorithm."
         ::mmsg::send $this [format "Main time step: %7.4f" $main_time_step]
         ::mmsg::send $this [format "Smaller time step: %7.4f" [expr $main_time_step/$multitimestep]]
-        if { $npt == "on" } {
-            ::mmsg::err "Can't combine multitimestep with NPT thermostat."
-        }
     }
 
     # MPI distribution
@@ -220,7 +217,7 @@ namespace eval ::cgtools {
     # Allow children namespaces that we can explicitly allow messages from these
     ::mmsg::send $this "Assigning namespaces"
     if { [ catch { ::mmsg::setnamespaces \
-        "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}" } errmsf ] } {
+        "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}" } errmsg ] } {
         puts "Warning: $errmsg"
     }
     set message_allowlist { :: $this ::cgtools ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
