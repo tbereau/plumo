@@ -306,9 +306,6 @@ namespace eval ::cgtools::espresso {
                 #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
             }
 
-            set cfgt [analyze configtemp]
-            puts "cfgtmp [setmd time] [expr -1.*[lindex $cfgt 0]/(0.00000001+[lindex $cfgt 1])]"
-
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 } {
 

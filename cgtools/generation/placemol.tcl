@@ -319,9 +319,6 @@ proc ::cgtools::generation::place_protein { mol partlist } {
             mass $partmass fix 1 1 1 mol $molIdx"
         append part_cmd $mts
         append part_cmd $therm
-        if { [lindex $parttypeinfo 1] == "CB" } {
-            append part_cmd " configtemp 1"
-        }
         eval $part_cmd
         lappend peptide_parts $partnum
     }
