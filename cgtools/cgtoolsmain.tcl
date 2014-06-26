@@ -142,6 +142,10 @@ namespace eval ::cgtools {
         ::mmsg::send $this [format "Smaller time step: %7.4f" [expr $main_time_step/$multitimestep]]
     }
 
+    if { $npt == "on" } {
+        require_feature NPT
+    }
+
     # MPI distribution
     # MPI distribution of bilayer
     if { [lindex geometry 1] != "random"} {

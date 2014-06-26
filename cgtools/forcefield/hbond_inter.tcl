@@ -7,6 +7,7 @@
 # 				 -2 0 $::cgtools::peptideb::HB_bilayer_z0 $::cgtools::peptideb::HB_bilayer_dz \
 # 				 $::cgtools::peptideb::HB_bilayer_kappa $::cgtools::peptideb::ljangle_eps_bilayer
 # } else {
+  require_feature LJ_ANGLE
 	::mmsg::send [namespace current] "Registering lj-angle interaction"
     set ljangle_eff $peptideb::ljangle_eps
     inter 8 11 lj-angle $ljangle_eff \

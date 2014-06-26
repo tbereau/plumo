@@ -92,6 +92,7 @@ for { set p 0 } { $p < $nbond } { incr p } {
 		set bn1 [lindex $bondname 2]
 		set overlapnamenow overlap_bond.$bn0$bn1\.coff
 		lappend overlapnames $overlapnamenow 
+		require_feature OVERLAPPED
 		lappend bonded_parms [list $bondid overlapped bond $::cgtools::overlapdir/$overlapnamenow]
 	}
 	if {$bondfeature == 4} {
@@ -101,6 +102,7 @@ for { set p 0 } { $p < $nbond } { incr p } {
 		set bn2 [lindex $bondname 3]
 		set overlapnamenow overlap_bend.$bn0$bn1$bn2\.coff
 		lappend overlapnames $overlapnamenow 
+		require_feature OVERLAPPED
 		lappend bonded_parms [list $bondid overlapped bond $::cgtools::overlapdir/$overlapnamenow]
 	}
 }
@@ -119,6 +121,7 @@ for { set p 0 } { $p < $nangl } { incr p } {
 	set an2 [lindex $anglname 3]
 	set overlapnamenow overlap_cosangl.$an0$an1$an2\.coff
 	lappend overlapnames $overlapnamenow 
+	require_feature OVERLAPPED
 	lappend bonded_parms [list $bondid overlapped angle $::cgtools::overlapdir/$overlapnamenow]
 }
 
@@ -141,6 +144,7 @@ for { set p 0 } { $p < $ndihe } { incr p } {
 	set dn3 [lindex $dihename 4]
 	set overlapnamenow overlap_dihe.$dn0$dn1$dn2$dn3\.coff
 	lappend overlapnames $overlapnamenow 
+	require_feature OVERLAPPED
 	lappend bonded_parms [list $bondid overlapped dihedral $::cgtools::overlapdir/$overlapnamenow]
 }
 if {$ndihe > 0} {
@@ -166,6 +170,7 @@ for { set i 0 } { $i < $nnonb } { incr i } {
 	set tabnamej [lindex $tabname 1]
 	set tablenamenow pot_force_nonbond.$tabnamei$tabnamej\.tab
 	lappend tablenames $tablenamenow 
+	require_feature TABULATED
 	lappend nb_interactions [list $typei $typej tabulated $::cgtools::tabledir/$tablenamenow]
 }
 unset nnonb nonbinfo btype typei typej tabname tabnamei tabnamej tablenamenow 

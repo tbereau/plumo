@@ -223,6 +223,8 @@ lappend bonded_parms [list 120 virtual_bond]
 #  16      term-C
 #  20-43   Cb
 
+require_feature LENNARD_JONES
+require_feature LENNARD_JONES_GENERIC
 # interaction N  and N
 lappend nb_interactions \
     [list 8 8 lennard-jones $peptideb::lj_eps [expr 2.*$peptideb::rvdw_N]  [expr $peptideb::cut_factor*2.*$peptideb::rvdw_N ] \
