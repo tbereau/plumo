@@ -6,15 +6,10 @@
 ::mmsg::send [namespace current] "loading parameter file .. " nonewline
 flush stdout
 
-# HREMD
-set lambda_values {1.0 0.0}
-set replica_rounds 100
-set hremd_timestep 100
-
 # Specify the name of the job <ident> the location of forcetables and
 # the output and scripts directories, dir and filename of the initial positions
 #set currentrundir "runcode"
-set ident "hremd"
+set ident "walp23-folded"
 set outputdir "./$ident"
 set topofile "$ident.top"
 set readpdbdir "./readfiles"
@@ -110,17 +105,17 @@ set gamma_v 0.00004
 
 # Simulation time (in units of tau) while peptide is frozen
 # main_time_step will be set to 0.01 after that.
-set fix_time 100.0
+set fix_time 10.0
 
 # -------- Set the espresso integration steps and times 
 # The number of steps to integrate with each call to integrate
 set int_steps   1000
 # The number of times to call integrate
-set int_n_times 10
+set int_n_times 1000
 
 # -------- Frequency of backup and analysis
 # backup frequency 
-set write_frequency 10000
+set write_frequency 10
 # analysis frequency 
 set analysis_write_frequency 1
 
@@ -134,6 +129,5 @@ set stray_cut_off 30.
 # These are are parameters that will be passed to the setup_analysis
 lappend analysis_flags boxl
 lappend analysis_flags temperature
-lappend analysis_flags energy
 
 ::mmsg::send [namespace current] "Parameter file parsing is done"
