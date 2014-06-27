@@ -85,7 +85,7 @@ set free_warmsteps 1;#10
 set free_warmtimes 20
 
 # ------ Integration parameters -----------------#
-set main_time_step 0.1
+set main_time_step 0.01
 set verlet_skin 2.0 
 # -------Constant Temperature-----------------#
 set langevin_gamma 0.2
@@ -103,7 +103,6 @@ set gamma_v 0.00004
 #set dpd_gamma 1.0 
 
 # Simulation time (in units of tau) while peptide is frozen
-# main_time_step will be set to 0.01 after that.
 set fix_time 10.0
 
 # -------- Set the espresso integration steps and times 

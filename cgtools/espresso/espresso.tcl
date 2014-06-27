@@ -299,9 +299,7 @@ namespace eval ::cgtools::espresso {
                             part [expr $i] fix 0 0 0
                         }
                     }
-                }
-                # FIX LATER
-                setmd time_step $cgtools::main_time_step      
+                }    
             }
 
             # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
