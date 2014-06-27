@@ -289,9 +289,13 @@ namespace eval ::cgtools::espresso {
                 # If the membrane have any fixed particles, unfix them after warmup
                 set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
                 for {set i 0} { $i <  [setmd n_part] } {incr i} {
+                    set partIsVirt 0
+                    if { [ catch { set partIsVirt [part $i print virtual] } ] } {
+                        set partIsVirt 0
+                    }
                     if { [lsearch $cgtools::userfixedparts $i ] == -1 } {
                         if { (([part $i print type] > 7 && $::cgtools::implicit_membrane == 1) || \
-                            $::cgtools::implicit_membrane == 0) && [part $i print virtual] == 0} {
+                            $::cgtools::implicit_membrane == 0) && $partIsVirt == 0} {
                             part [expr $i] fix 0 0 0
                         }
                     }
