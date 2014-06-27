@@ -69,6 +69,8 @@ namespace eval ::cgtools {
     # Set default HREMD exchange controller
     variable hremd 0
     set hremd_connect 0
+    # Line tension calculation from semi-periodic systems (i.e., "pancake simulations")
+    set linetension 0
     # Implicit membrane environment will trigger the softcore flag
     variable implicit_membrane 0
     # Restraints on bilayer

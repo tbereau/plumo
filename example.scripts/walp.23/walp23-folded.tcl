@@ -51,7 +51,6 @@ lappend setbox_l $lengthx
 lappend setbox_l $lengthx
 lappend setbox_l 166.9462 
 unset lengthx
-set linetension 0
 
 # --- Specify geometry and compositions of the peptide #1 ----#
 ### Set the geometry 
