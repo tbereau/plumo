@@ -104,7 +104,7 @@ namespace eval ::cgtools::espresso {
                         set startk [expr $initTime + 1]
                         set startj [expr $initTime + 1]
                         set mdinit [expr $mdinit + \
-                            ($initTime+1) * $cgtools::replica_timestep * $cgtools::main_time_step * \
+                            ($initTime+1) * $cgtools::timestep * $cgtools::main_time_step * \
                                 $cgtools::write_frequency]
                     }
                     set ::cgtools::pdb_resume $lastFile
