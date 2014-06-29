@@ -53,7 +53,7 @@ namespace eval ::cgtools::espresso {
         set mdinit $cgtools::startmdtime
         set resuming 0
         # Set the output folders 
-        set folder "$cgtools::outputdir/temp$temp"
+        set folder "$cgtools::outputdir"
         if { [catch {exec mkdir $folder}] } {
             # Directory exists. Try to resume the simulation (see below).
             set resuming 1
