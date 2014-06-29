@@ -49,6 +49,18 @@ namespace eval ::cgtools::espresso {
         set this [namespace current]
         mmsg::send $this "Feeding lipid parameters into ESPResSo running..."
 
+        # Resume old simulation
+        set mdinit $cgtools::startmdtime
+        set resuming 0
+        # Set the output folders 
+        set folder "$cgtools::outputdir/temp$temp"
+        if { [catch {exec mkdir $folder}] } {
+            # Directory exists. Try to resume the simulation (see below).
+            set resuming 1
+        } else {
+            puts "No existing directory. Fresh start."
+        }
+
         # Attempt to read a checkpoint file
         set checkpointexists [ ::cgtools::utils::readcheckpoint $cgtools::outputdir ]
         
@@ -67,42 +79,40 @@ namespace eval ::cgtools::espresso {
             set startj 0
             set startk 0
 
-            # Check whether directory already exists
-            set resuming 0
-            set mdinit $cgtools::startmdtime
-            if { [file exists $cgtools::outputdir] == 1 } {
+            if { $resuming == 1 } {
+                set resuming 0
+                variable ::cgtools::pdb_resume
                 # Resuming old simulation. Look for latest PDB file
-                set tclfiles [glob -nocomplain -directory $cgtools::outputdir *.pdb]
-                if { [llength $tclfiles] > 0 } {
-                    set lastFile [lindex $tclfiles 0]
-                    set lastDate [file mtime [lindex $tclfiles 0]]
+                set tclfiles [glob -nocomplain -directory $folder *.pdb]
+                set lastFile ""
+                if { [llength $tclfiles] > 0} {
+                    set lastDate "000000000"
                     foreach f $tclfiles {
                         set fdate [file mtime $f]
-                        if { [expr {$fdate > $lastDate}] } {
+                        if { [expr {$fdate > $lastDate}] && [string first "warm" $f] == "-1" } {
                             set lastFile $f
                             set lastDate $fdate
                         }
                     }
                 }
-                if { [info exists lastFile] == 1 } { 
-                    # Don't resume a warmup file
-                    if { [string first "warm" $lastFile] == "-1" } {
-                        # Read rough time step from file id
-                        set vmdId [string first $cgtools::ident.vmd $lastFile]
-                        if { $vmdId != -1 } {
-                            set vmdLgth [string length "$cgtools::ident.vmd"]
-                            set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
-                            set startk [expr $initTime + 1]
-                            set startj [expr $initTime + 1]
-                            set mdinit [expr $mdinit + \
-                                ($initTime+1) * $cgtools::int_steps * $cgtools::main_time_step * \
-                                        $cgtools::write_frequency]
-                        }
-                        puts "Resuming simulation from PDB: $lastFile"
-                        puts "init time step $mdinit"
-                        set cgtools::readpdbname $lastFile
-                        set resuming 1
+                if { $lastFile != "" } {
+                    # Read rough time step from file id
+                    set vmdId [string first $cgtools::ident.vmd $lastFile]
+                    if { $vmdId != -1 } {
+                        set vmdLgth [string length "$cgtools::ident.vmd"]
+                        set initTime [scan [string range $lastFile [expr $vmdId+$vmdLgth] end-4] %d]
+                        set startk [expr $initTime + 1]
+                        set startj [expr $initTime + 1]
+                        set mdinit [expr $mdinit + \
+                            ($initTime+1) * $cgtools::replica_timestep * $cgtools::main_time_step * \
+                                $cgtools::write_frequency]
                     }
+                    set ::cgtools::pdb_resume $lastFile
+                    set resuming 1
+                    puts "Resuming simulation from PDB: $pdb_resume"
+                    puts "init time step $mdinit" 
+                } else {
+                    puts "No PDB to resume from"
                 }
             }
 
