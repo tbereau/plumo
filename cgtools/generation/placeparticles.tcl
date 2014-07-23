@@ -51,7 +51,6 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
         unset partlists
         for { set i 0 } { $i < $nbeads_mol } {incr i } {
                 set curline [lindex $linelist $atomNumber] 
-                puts $curline
                 set posx [string range $curline 31 38]
                 set posy [string range $curline 39 46]
                 set posz [string range $curline 47 54]
