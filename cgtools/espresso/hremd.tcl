@@ -48,8 +48,6 @@ namespace eval cgtools {
             
             set this [namespace current]
             mmsg::send $this "Starting HREMD instance at lambda $lambda"
-            mmsg::send $this "Using softcore potentials"
-            set ::cgtools::forcefield::peptideb::softcore_flag 1
 
             # Resume old simulation
             set mdinit $cgtools::startmdtime

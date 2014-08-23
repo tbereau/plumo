@@ -38,12 +38,14 @@ namespace eval ::cgtools::forcefield {
         set lambda_coupling $lambda_i
         source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
         ::cgtools::utils::set_nb_interactions $nb_interactions
+        source_hbond_ff
         integrate 0
     }
 
     proc source_hbond_ff { } {
         # Is called by ::cgtools::generation::placemol
         variable ::cgtools::hremd
+        variable ::cgtools::forcefield::peptideb::lambda_coupling
         source $::cgtools::cgtoolsdir/forcefield/hbond_inter.tcl
     }
 

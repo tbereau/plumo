@@ -376,6 +376,7 @@ set lambdaLJ  1.0
 set lambdaWCA 1.0
 set delta     0.0
 if { $peptideb::softcore_flag != 0 } {
+  ::mmsg::send [namespace current] "Using softcore potentials"
   # Soft-core potential is turned on
   set lambda    $peptideb::lambda_coupling
   # set lambdaLJ  [::cgtools::utils::max [expr 2*($lambda-0.5)] 0.0]
