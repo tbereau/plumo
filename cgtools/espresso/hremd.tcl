@@ -52,10 +52,14 @@ namespace eval cgtools {
             # Resume old simulation
             set mdinit $cgtools::startmdtime
             set resuming 0
-
             # Set the output folders 
             set folder "$cgtools::outputdir/lambda$lambda"
-            catch {exec mkdir $folder}
+            if { [catch {exec mkdir $folder}] } {
+                # Directory exists. Try to resume the simulation (see below).
+                set resuming 1
+            } else {
+                puts "No existing directory. Fresh start."
+            }
             set file_f [join [list $folder/observables.dat ] ""]
             set file_h [join [list $folder /histogram.dat ] ""]
 
@@ -73,8 +77,8 @@ namespace eval cgtools {
                     variable ::cgtools::pdb_resume
                     # Resuming old simulation. Look for latest PDB file
                     set tclfiles [glob -nocomplain -directory $folder *.pdb]
+                    set lastFile ""
                     if { [llength $tclfiles] > 0} {
-                        set lastFile ""
                         set lastDate "000000000"
                         foreach f $tclfiles {
                             set fdate [file mtime $f]
