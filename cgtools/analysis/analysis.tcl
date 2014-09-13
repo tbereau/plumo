@@ -39,6 +39,7 @@ source [file join [file dirname [info script]] energy.tcl]
 source [file join [file dirname [info script]] diffusion.tcl]
 source [file join [file dirname [info script]] distance_partbilayer.tcl]
 source [file join [file dirname [info script]] fep.tcl]
+source [file join [file dirname [info script]] hbond.tcl]
 
 
 # ::cgtools::analysis::print_averages --
