@@ -18,6 +18,8 @@ package require ::cgtools::analysis
 package provide ::cgtools::espresso 1.0.0
 
 namespace eval ::cgtools::espresso {
+    variable pdb_output
+
     # Initialize an espresso simulation
     # from the lipid chain we built with the script.
     # This routine will be called by the cgtoolsmain script as well as
@@ -44,6 +46,7 @@ namespace eval ::cgtools::espresso {
         global checkpointexists
         global errorInfo errorCode 
         variable ::cgtools::bonded_parms
+        variable ::cgtools::espresso::pdb_output
 
 
         set this [namespace current]
@@ -292,9 +295,6 @@ namespace eval ::cgtools::espresso {
             # Do the real work of integrating equations of motion
             integrate $cgtools::int_steps
             
-            # Call all of the analyze routines that we specified when setting up our analysis
-            ::cgtools::analysis::do_analysis
-
             if { [setmd time] > $cgtools::fix_time } {
                 # If the membrane have any fixed particles, unfix them after warmup
                 set cgtools::userfixedparts [::cgtools::generation::get_userfixedparts ]
@@ -312,12 +312,6 @@ namespace eval ::cgtools::espresso {
                 }    
             }
 
-            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
-            if { [expr $kkkkkk + 1] % $cgtools::analysis_write_frequency ==0 } {
-                ::cgtools::analysis::print_averages
-                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
-            }
-
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 } {
 
@@ -333,37 +327,27 @@ namespace eval ::cgtools::espresso {
                     #::cgtools::utils::writecrd_charmm \
 		    #  "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].crd" \
 		    #  $topology -periodbox 1 -computecomz 1
-                    
+                    set pdb_output "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].pdb"
                     ::cgtools::utils::writepdb_charmm \
-                        "$cgtools::outputdir/$cgtools::ident.vmd[format %04d $jjjjjj].pdb" $topology \
-                        -periodbox 1 -computecomz 1
+                        $pdb_output $topology -periodbox 1 -computecomz 1
                 }
 
                 ::cgtools::utils::update_midplane_pos $topology
 
                 incr jjjjjj
 
-                # # Write a checkpoint to allow restarting.  Overwrites previous checkpoint
-                # mmsg::send $this "setting checkpoint $kkkkkk [setmd time] $jjjjjj"    
-                # catch { exec rm $cgtools::outputdir/checkpoint.latest.chk }
-                # #set code [catch { exec rm -f $cgtools::outputdir/checkpoint.latest.chk } string]
-                # #if {$code == 1}{
-                # # return -code error -errorinfo $errorInfo -errorcode $errorCode $string
-                # #        mmsg::send $this "$errorInfo"    
-                # #        mmsg::send $this "errorCode"    
-                # #}
-                # catch { exec mv $cgtools::outputdir/checkpoint.latest.out \ 
-                #     $cgtools::outputdir/checkpoint.latest.out.old }
-                # checkpoint_set "$cgtools::outputdir/checkpoint.latest.out"
-                # # Try to copy a checkpoint to the backup checkpoint folder
-                # # Usefull if the program crashes while writing a checkpoint
-                # if { [ catch { exec cp $cgtools::outputdir/checkpoint.latest.out \
-                #                    $cgtools::outputdir/checkpoint_bak/ } ] } {
-                #     mmsg::warn $this "warning: couldn't copy backup checkpoint"
-                # }
 
             }
             #end of if { [expr $kkkkkk + 1] % $cgtools::write_frequency ==0 }
+
+            # Call all of the analyze routines that we specified when setting up our analysis
+            ::cgtools::analysis::do_analysis
+
+            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
+            if { [expr $kkkkkk + 1] % $cgtools::analysis_write_frequency ==0 } {
+                ::cgtools::analysis::print_averages
+                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
+            }
 
             # Set the elapsed CPU time in computation, do not count that used for warm up
             set timingcurr [clock clicks -milliseconds]

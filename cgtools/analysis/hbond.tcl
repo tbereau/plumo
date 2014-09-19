@@ -7,9 +7,12 @@
 namespace eval ::cgtools::analysis {}
 
 namespace eval ::cgtools::analysis::hbond {
-    variable dist_partbilayer
-    variable dist_partbilayer_i
-    variable f_dispb
+    variable helicity
+    variable helicity_i
+    variable hbondE
+    variable hbondE_i
+    variable f_hbond
+    variable f_hbond_file
     namespace export printav_hbond
     namespace export setup_hbond
     namespace export analyze_hbond
@@ -17,56 +20,62 @@ namespace eval ::cgtools::analysis::hbond {
 }
 
 proc ::cgtools::analysis::hbond::resetav_hbond { } {
-    variable dist_partbilayer
-    variable dist_partbilayer_i
-    variable ::cgtools::virtual_sites
+    variable helicity
+    variable helicity_i
+    variable hbondE
+    variable hbondE_i
 
-    set dist_partbilayer ""
-    set dist_partbilayer_i 0
-    foreach molVir $virtual_sites {
-        lappend dist_partbilayer 0.0
-    }
+    set helicity 0.0
+    set helicity_i 0
+    set hbondE 0.0
+    set hbondE_i 0
+
 }
 
 proc ::cgtools::analysis::hbond::printav_hbond { } {
     global ::cgtools::analysis::time
     global ::cgtools::analysis::outputdir
-    variable ::cgtools::virtual_sites
-    variable dist_partbilayer
-    variable dist_partbilayer_i
+    variable helicity
+    variable helicity_i
+    variable hbondE
+    variable hbondE_i
+    variable f_hbond_file
 
-    set f_dispb [open "$outputdir/hbond.dat" a]
-    puts -nonewline $f_dispb [format "%15.4f " $time]
+    set f_hbond [open $f_hbond_file a]
+    
+    puts -nonewline $f_hbond [format "%15.4f " $time]
+    puts -nonewline $f_hbond [format "%7.4f " [expr $helicity/$helicity_i]]
+    puts $f_hbond [format "%7.4f " [expr $hbondE/$hbondE_i]]
 
-    set eleCounter 0
-    foreach molVir $virtual_sites {
-        puts -nonewline $f_dispb [format "%7.4f " [expr [lindex $dist_partbilayer $eleCounter]/$dist_partbilayer_i]]
-        incr eleCounter
-    }
-    puts $f_dispb ""
-    close $f_dispb
+    close $f_hbond
 }
 
 proc ::cgtools::analysis::hbond::setup_hbond { args } {
-    global ::cgtools::analysis::outputdir
     global ::cgtools::analysis::iotype
     variable ::cgtools::virtual_sites
-    variable f_dispb
+    variable ::cgtools::ragtime_path
+    global ::cgtools::analysis::outputdir
+    variable f_hbond
+    variable f_hbond_file
 
-    if { [file exists "$outputdir/hbond.dat"] } {
+    set f_hbond_file "$outputdir/time_vs_hbond.dat"
+
+    # Check that the ragtime package can be found.
+    if { ![file exists $ragtime_path ] } {
+        ::mmsg::err $this "Ragtime package wasn't found.\n
+        Should be $ragtime_path"
+    }
+
+    if { [file exists $f_hbond_file] } {
         set newfile 0
     } else {
         set newfile 1
     }
-    set f_dispb [open "$outputdir/hbond.dat" $iotype]
+    set f_hbond [open $f_hbond_file $iotype]
     if { $newfile || $iotype == "w"} {
-        puts -nonewline $f_dispb "\# Time "
-        foreach i $virtual_sites {
-            puts -nonewline $f_dispb "distance(particule-bilayer) "
-        }
-        puts $f_dispb ""
+        puts $f_hbond "\# Time   Helicity_ratio   H-bond_energy"
     }
-    close $f_dispb
+    close $f_hbond
 
     resetav_hbond
     
@@ -74,45 +83,37 @@ proc ::cgtools::analysis::hbond::setup_hbond { args } {
 
 proc ::cgtools::analysis::hbond::analyze_hbond { } {
     variable ::cgtools::analysis::topology
-    global ::cgtools::analysis::outputdir
     global ::cgtools::analysis::iotype
-    variable dist_partbilayer
-    variable dist_partbilayer_i
-    variable ::cgtools::virtual_sites
-    variable ::cgtools::partID_membrane_midplane
+    variable helicity
+    variable helicity_i
+    variable hbondE
+    variable hbondE_i
     global ::cgtools::analysis::time
-    variable f_dispb
+    variable ::cgtools::espresso::pdb_output
+    variable ::cgtools::ragtime_path
 
-    if { [llength $virtual_sites] == 0 } { return 0 }
-
-    set memcomz [lindex [part $partID_membrane_midplane print pos] 2]
-    # Update fake particle position
-    part $partID_membrane_midplane pos 1 1 $memcomz
-    set eleCounter 0
-
-    foreach molVir $virtual_sites {
-        set posVirSit [part $molVir print pos]
-        set posz [lindex $posVirSit 2]
-        lset dist_partbilayer $eleCounter [expr [lindex $dist_partbilayer $eleCounter]+abs($posz - $memcomz)]
-        # Check that the virtual site is close to the center of mass of the
-        # molecule. Otherwise exit (parallelization issue).
-        set molid [part $molVir print mol]
-        set posCoM "0.0 0.0 0.0"
-        set comIdx 0
-        for {set j 0} {$j < [setmd n_part]} {incr j} {
-            if {[part $j print mol] == $molid} {
-                set posCoM [::cgtools::utils::add2vec $posCoM [part $j print pos]]
-                incr comIdx
+    # Helicity
+    # run ragtime. it's possible we get an error, e.g. there's no hbonds. catch it.
+    if {![catch {set output [exec $ragtime_path $pdb_output]} errmsg]} {
+        # Helicity percentage
+        set aggr_list [lsearch -all $output "percentage"]
+        foreach position $aggr_list {
+            if {[lindex $output [expr $position-1]]=="Helicity"} {
+                set helicity [expr $helicity + \
+                    [lindex $output [expr $position+2]]]
             }
-        }
-        set posCoM [::cgtools::utils::scalevec $posCoM [expr 1./$comIdx]]
-        set disCoMVir [::cgtools::utils::distance $posCoM $posVirSit]
-        if { $disCoMVir > 5.0 } {
-            ::mmsg::err [namespace current] "Virtual site of molecule $molid away from its center of mass (dis=$disCoMVir)."
-        }
-        incr eleCounter
-    }
-    incr dist_partbilayer_i
+        }  
+    } else {
+        ::mmsg::send [namespace current] "ragtime encountered an error:"
+        ::mmsg::send [namespace current] $errmsg
+        ::mmsg::send [namespace current] "The parameter will be set *Arbitrarily* to 0."
+        set param1 0.
+    }                      
+    incr helicity_i
+
+    # H-bond energy
+    set hbondE [expr $hbondE + [analyze energy nonbonded 8 11]]
+    incr hbondE_i
 
     return
 }

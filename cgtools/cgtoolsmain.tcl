@@ -90,6 +90,8 @@ namespace eval ::cgtools {
     variable virtual_sites ""
     # Peptide's temperature
     variable temp_peptide -1.
+    # Ragtime software for helicity analysis
+    variable ragtime_path
 
     # Set default system parameters.
     set thermo Langevin
@@ -129,6 +131,9 @@ namespace eval ::cgtools {
     # Directories now stored in cgtools
     set tabledir "$cgtoolsdir/forcefield/forcetables"
     set overlapdir "$cgtoolsdir/forcefield/overlapcoffs"
+
+    # Ragtime -- Useful to analyze H-bonds
+    set ragtime_path "$cgtoolsdir/../misc.scripts/ragtime/ragtime.tcl"
 
     # Read the parameter file. 
     set paramsfile [lindex $argv 0]

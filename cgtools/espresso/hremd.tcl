@@ -303,6 +303,7 @@ namespace eval cgtools {
         # Arguments : - id:   identity of system
         #         - lambda: Hamiltonian coupling
         proc hremd_perform {id lambda} {
+            variable ::cgtools::espresso::pdb_output
 
             global jjjjjj_[set lambda]
             global topology_[set lambda]
@@ -370,15 +371,7 @@ namespace eval cgtools {
 
             ::cgtools::utils::append_obs $file_f $current_energy $label
             ::cgtools::utils::write_histogram $file_h $current_energy        
-            
-            # Call all of the analyze routines that we specified when setting up our analysis
-            ::cgtools::analysis::do_analysis
 
-            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
-            if { [expr [set kkkkkk] + 1] % $cgtools::analysis_write_frequency ==0 } {
-                ::cgtools::analysis::print_averages
-                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
-            }
 
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {
@@ -389,9 +382,8 @@ namespace eval cgtools {
                 # flush stdout
 
                 if { $cgtools::use_vmd == "offline" } {
-                    ::cgtools::utils::writepdb_charmm \
-                        "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb" \
-            $topology -periodbox 1
+                    set pdb_output "$folder/$cgtools::ident.vmd[format %04d [set jjjjjj]].pdb"
+                    ::cgtools::utils::writepdb_charmm $pdb_output $topology -periodbox 1
                 }
 
                 incr jjjjjj
@@ -411,7 +403,15 @@ namespace eval cgtools {
             }
             #end of if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 }
 
+            # Call all of the analyze routines that we specified when setting up our analysis
+            ::cgtools::analysis::do_analysis
 
+            # If kkkkkk is a multiple of analysis_write_frequency then write the analysis results to file
+            if { [expr [set kkkkkk] + 1] % $cgtools::analysis_write_frequency ==0 } {
+                ::cgtools::analysis::print_averages
+                #::cgtools::utils::update_force $rdfcglist $rdfaalist $tabledir $tablenames
+            }
+            
             ::cgtools::utils::update_midplane_pos $topology
             
             incr kkkkkk
