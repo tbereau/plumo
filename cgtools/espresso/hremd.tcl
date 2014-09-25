@@ -304,6 +304,7 @@ namespace eval cgtools {
         #         - lambda: Hamiltonian coupling
         proc hremd_perform {id lambda} {
             variable ::cgtools::espresso::pdb_output_dir
+            variable ::cgtools::analysis::outputdir
 
             global jjjjjj_[set lambda]
             global topology_[set lambda]
@@ -373,6 +374,8 @@ namespace eval cgtools {
             ::cgtools::utils::append_obs $file_f $current_energy $label
             ::cgtools::utils::write_histogram $file_h $current_energy        
 
+
+            set outputdir $folder
 
             # If kkkkkk is a multiple of write_frequency then write out a full particle configuration
             if { [expr [set kkkkkk] + 1] % $cgtools::write_frequency ==0 } {

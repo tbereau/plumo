@@ -41,13 +41,16 @@ proc ::cgtools::analysis::hbond::printav_hbond { } {
     variable hbondE_i
     variable f_hbond_file
 
+    set f_hbond_file "$outputdir/time_vs_hbond.dat"    
+
     set f_hbond [open $f_hbond_file a]
-    
+
     puts -nonewline $f_hbond [format "%15.4f " $time]
     puts -nonewline $f_hbond [format "%7.4f " [expr $helicity/$helicity_i]]
     puts $f_hbond [format "%7.4f " [expr $hbondE/$hbondE_i]]
 
     close $f_hbond
+
 }
 
 proc ::cgtools::analysis::hbond::setup_hbond { args } {
