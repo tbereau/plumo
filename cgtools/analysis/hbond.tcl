@@ -45,7 +45,6 @@ proc ::cgtools::analysis::hbond::printav_hbond { } {
     
     puts -nonewline $f_hbond [format "%15.4f " $time]
     puts -nonewline $f_hbond [format "%7.4f " [expr $helicity/$helicity_i]]
-    puts -nonewline $f_hbond [format "%s " $f_hbond_file]
     puts $f_hbond [format "%7.4f " [expr $hbondE/$hbondE_i]]
 
     close $f_hbond
@@ -95,7 +94,6 @@ proc ::cgtools::analysis::hbond::analyze_hbond { } {
 
     # Create temporary PDB
     set pdb_file "$pdb_output_dir/pdbtmp.pdb"
-    puts $pdb_file
     ::cgtools::utils::writepdb_charmm $pdb_file $topology -periodbox 1
 
 
