@@ -303,7 +303,7 @@ namespace eval cgtools {
         # Arguments : - id:   identity of system
         #         - lambda: Hamiltonian coupling
         proc hremd_perform {id lambda} {
-            variable ::cgtools::espresso::pdb_output
+            variable ::cgtools::espresso::pdb_output_dir
 
             global jjjjjj_[set lambda]
             global topology_[set lambda]
@@ -327,6 +327,7 @@ namespace eval cgtools {
             set folder "$cgtools::outputdir/lambda$lambda"
             set file_f [join [list $folder /observables.dat ] ""]
             set file_h [join [list $folder /histogram.dat   ] ""]
+            set pdb_output_dir $folder
             
             #Main Integration                                          #
             #----------------------------------------------------------#

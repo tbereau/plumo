@@ -45,6 +45,7 @@ proc ::cgtools::analysis::hbond::printav_hbond { } {
     
     puts -nonewline $f_hbond [format "%15.4f " $time]
     puts -nonewline $f_hbond [format "%7.4f " [expr $helicity/$helicity_i]]
+    puts -nonewline $f_hbond [format "%s " $f_hbond_file]
     puts $f_hbond [format "%7.4f " [expr $hbondE/$hbondE_i]]
 
     close $f_hbond
@@ -89,12 +90,18 @@ proc ::cgtools::analysis::hbond::analyze_hbond { } {
     variable hbondE
     variable hbondE_i
     global ::cgtools::analysis::time
-    variable ::cgtools::espresso::pdb_output
+    variable ::cgtools::espresso::pdb_output_dir
     variable ::cgtools::ragtime_path
+
+    # Create temporary PDB
+    set pdb_file "$pdb_output_dir/pdbtmp.pdb"
+    puts $pdb_file
+    ::cgtools::utils::writepdb_charmm $pdb_file $topology -periodbox 1
+
 
     # Helicity
     # run ragtime. it's possible we get an error, e.g. there's no hbonds. catch it.
-    if {![catch {set output [exec $ragtime_path $pdb_output]} errmsg]} {
+    if {![catch {set output [exec $ragtime_path $pdb_file]} errmsg]} {
         # Helicity percentage
         set aggr_list [lsearch -all $output "percentage"]
         foreach position $aggr_list {
@@ -110,6 +117,9 @@ proc ::cgtools::analysis::hbond::analyze_hbond { } {
         set param1 0.
     }                      
     incr helicity_i
+
+    # Remove temporary file
+    catch {exec rm -f $pdb_file}
 
     # H-bond energy
     set hbondE [expr $hbondE + [analyze energy nonbonded 8 11]]

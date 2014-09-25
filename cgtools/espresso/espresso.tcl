@@ -18,7 +18,7 @@ package require ::cgtools::analysis
 package provide ::cgtools::espresso 1.0.0
 
 namespace eval ::cgtools::espresso {
-    variable pdb_output
+    variable pdb_output_dir
 
     # Initialize an espresso simulation
     # from the lipid chain we built with the script.
@@ -46,7 +46,7 @@ namespace eval ::cgtools::espresso {
         global checkpointexists
         global errorInfo errorCode 
         variable ::cgtools::bonded_parms
-        variable ::cgtools::espresso::pdb_output
+        variable ::cgtools::espresso::pdb_output_dir
 
 
         set this [namespace current]
@@ -63,6 +63,7 @@ namespace eval ::cgtools::espresso {
         } else {
             puts "No existing directory. Fresh start."
         }
+        set pdb_output_dir $folder
 
         # Attempt to read a checkpoint file
         set checkpointexists [ ::cgtools::utils::readcheckpoint $cgtools::outputdir ]
