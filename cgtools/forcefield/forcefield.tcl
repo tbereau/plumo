@@ -7,7 +7,7 @@ package provide ::cgtools::forcefield 1.0.0
 namespace eval ::cgtools::forcefield {
     proc source_all_ff { } {
         # lipid
-        source_popc_ff
+        source_lipid_ff
         # peptide
         source_peptide_ff
     }
@@ -49,13 +49,15 @@ namespace eval ::cgtools::forcefield {
         source $::cgtools::cgtoolsdir/forcefield/hbond_inter.tcl
     }
 
-    proc source_popc_ff { } {
+    proc source_lipid_ff { } {
         variable bonded_parms
         variable ::cgtools::moltypelists
         variable ::cgtools::bonded_parms
         variable ::cgtools::nb_interactions
         # Lipid force field
         source $::cgtools::cgtoolsdir/forcefield/popc.tcl
+        source $::cgtools::cgtoolsdir/forcefield/dppc.tcl
+        source $::cgtools::cgtoolsdir/forcefield/dopc.tcl
     }
 
 }

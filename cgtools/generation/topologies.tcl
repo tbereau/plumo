@@ -21,10 +21,10 @@ proc ::cgtools::generation::create_simple_topo {n_mols beads_per_mol  args } {
     unset topo
 
     set options {
-	{moltype.arg 0 "type of molecule to create" }
-	{startpart.arg 0 "The starting id for particles" }
+        {moltype.arg 0 "type of molecule to create" }
+        {startpart.arg 0 "The starting id for particles" }
     }
-    set usage "Usage: ceate_simple_topo n_mols beads_per_mol \[startmol:startpart:]"
+    set usage "Usage: create_simple_topo n_mols beads_per_mol \[startmol:startpart:]"
     array set params [::cmdline::getoptions args $options $usage]
 
     ::mmsg::send [namespace current] "creating a topology for moltype $params(moltype)" 
@@ -35,18 +35,18 @@ proc ::cgtools::generation::create_simple_topo {n_mols beads_per_mol  args } {
     set partid $params(startpart)
 
     if { $n_mols <= 0 } {
-	return 0
+        return 0
     }
 
     for { set i 0 } { $i < $n_mols } { incr i } {
-	# construct the topo_entry for this lipid
+        # construct the topo_entry for this lipid
 
-	set topo_entry $mol_type
-	for { set j 0 } { $j < $beads_per_mol } { incr j } {
-	    lappend topo_entry $partid
-	    incr partid
-	}
-	lappend topo $topo_entry
+        set topo_entry $mol_type
+        for { set j 0 } { $j < $beads_per_mol } { incr j } {
+            lappend topo_entry $partid
+            incr partid
+        }
+        lappend topo $topo_entry
     }
     return $topo
 
@@ -95,29 +95,29 @@ proc ::cgtools::generation::shuffle_topo {topo} {
     set dotfreq [expr int(floor($n_molstotal/10.0))]
     if { $dotfreq < 1 } { set dotfreq 1}
     for { set i 0 } { $i < $n_molstotal } { incr i } {
-	
-	# According to the molecule proportions determine the type of
-	# the next molecule
-	set lpick [expr $n_remaining*[t_random]]
-	for {set lnum 0 } { $lnum <  [llength $remaining_molslist] } { incr lnum } {
-	    set lpick [expr $lpick - [lindex $remaining_molslist $lnum 1]]
+        
+        # According to the molecule proportions determine the type of
+        # the next molecule
+        set lpick [expr $n_remaining*[t_random]]
+        for {set lnum 0 } { $lnum <  [llength $remaining_molslist] } { incr lnum } {
+            set lpick [expr $lpick - [lindex $remaining_molslist $lnum 1]]
 
-		if  { $lpick <= 0 } {
-		    set thislipidtype [lindex $remaining_molslist $lnum 0]
-		    # Subtract the picked lipid from our molslist
-		    set n_before [lindex  $remaining_molslist $lnum 1]
-		    lset remaining_molslist $lnum 1 [expr  $n_before -1]
-		    set n_remaining [expr $n_remaining -1 ]
-		    break
-		}
-	}
+                if  { $lpick <= 0 } {
+                    set thislipidtype [lindex $remaining_molslist $lnum 0]
+                    # Subtract the picked lipid from our molslist
+                    set n_before [lindex  $remaining_molslist $lnum 1]
+                    lset remaining_molslist $lnum 1 [expr  $n_before -1]
+                    set n_remaining [expr $n_remaining -1 ]
+                    break
+                }
+        }
 
-	lappend typetemplate $thislipidtype
+        lappend typetemplate $thislipidtype
 
         if { $i%$dotfreq ==0 } {
-	    mmsg::send [namespace current] "." nonewline
-	    flush stdout
-	}
+            mmsg::send [namespace current] "." nonewline
+            flush stdout
+        }
     }
     mmsg::send [namespace current] "done" 
 
@@ -125,17 +125,17 @@ proc ::cgtools::generation::shuffle_topo {topo} {
     set molsizes [::cgtools::utils::listmollengths $topo ]
     set pnum $startpart
     foreach type $typetemplate {
-	foreach t $molsizes {
-	    if { [lindex $t 0] == $type  } {
-		set thislen [lindex $t 1]
-	    }
-	}
-	set thismol $type
-	for { set p 0 } { $p < $thislen } { incr p } {
-	    lappend thismol $pnum
-	    incr pnum
-	}
-	lappend shuffledtopo $thismol
+        foreach t $molsizes {
+            if { [lindex $t 0] == $type  } {
+                set thislen [lindex $t 1]
+            }
+        }
+        set thismol $type
+        for { set p 0 } { $p < $thislen } { incr p } {
+            lappend thismol $pnum
+            incr pnum
+        }
+        lappend shuffledtopo $thismol
     }
  
 
@@ -157,11 +157,11 @@ proc ::cgtools::generation::sort_topo { topo } {
     set maxtp [::cgtools::utils::maxmoltypeid $topo]
 
     for { set l 0 } { $l <= $maxtp } { incr l } {
-	for { set i 0 } { $i < $n_molstotal } { incr i } {
-	    if { [lindex [lindex $topo $i] 0 ] == $l } {
-		lappend sortedtopo [lindex $topo $i]
-	    }
-	}
+        for { set i 0 } { $i < $n_molstotal } { incr i } {
+            if { [lindex [lindex $topo $i] 0 ] == $l } {
+                lappend sortedtopo [lindex $topo $i]
+            }
+        }
     }
     return $sortedtopo
 }
@@ -179,15 +179,15 @@ proc ::cgtools::generation::join_topos { topo1 topo2 args } {
     unset joinedtopo
 
     set options {
-	{sortmolid  "sort by molid" }
+        {sortmolid  "sort by molid" }
     }
     set usage "Usage: join_topos \[sortmolid]"
     array set params [::cmdline::getoptions args $options $usage]
     foreach mol $topo1 {
-	lappend joinedtopo $mol
+        lappend joinedtopo $mol
     }
     foreach mol $topo2 {
-	lappend joinedtopo $mol
+        lappend joinedtopo $mol
     }
 
     return $joinedtopo

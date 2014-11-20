@@ -39,7 +39,6 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
    foreach mol $topology {
         set moltype [lindex $mol 0]
         set typeinfo [::cgtools::utils::matchtype $moltype ]
-
         set partbondlists [lindex $typeinfo 2]
         set beadlists [lindex $partbondlists 0]
         set nbeads_mol [llength $beadlists]
@@ -50,7 +49,7 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
         set partlists 0
         unset partlists
         for { set i 0 } { $i < $nbeads_mol } {incr i } {
-                set curline [lindex $linelist $atomNumber] 
+                set curline [lindex $linelist $atomNumber]
                 set posx [string range $curline 31 38]
                 set posy [string range $curline 39 46]
                 set posz [string range $curline 47 54]
@@ -79,7 +78,6 @@ proc ::cgtools::generation::placeparticles_all { readfile } {
         incr totalbeadsread $nbeads_mol
         incr molNumber 
     }
-  
     # Add information to coordinput variable
     lappend coordinput [list $readfile $totalbeadsread]
       

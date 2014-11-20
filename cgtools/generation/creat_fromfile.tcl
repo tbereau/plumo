@@ -25,26 +25,25 @@ proc ::cgtools::generation::fromfile::create_fromfile { args } {
 
     ::mmsg::send [namespace current] "placing initial positions of molecules from a pdb file"
     set options {
-	{readfile.arg  ""    "readpdb file name containing initial particle positions"}
+        {readfile.arg  ""    "readpdb file name containing initial particle positions"}
     }
     set usage "Usage: create_fromfile \[readfile] "
     # Strip off optional arguments and store in params
     array set params [::cmdline::getoptions args $options $usage]
 
     # Read all the particle positions from pdb file $params(readfile)
-
     set mollists [::cgtools::generation::placeparticles_all $params(readfile)]
 
     # number of molecules
     set imol 0
     foreach mol $topology {
-	set partlist [lindex $mollists $imol]
+        set partlist [lindex $mollists $imol]
         incr imol 
-	::cgtools::generation::placemol $mol $partlist -changepos 0 
+        ::cgtools::generation::placemol $mol $partlist -changepos 0 
     }
 
     # Check particle consistency
     if { [setmd n_part] != [expr [::cgtools::utils::maxpartid $topology] + 1] } {
-	mmsg::err [namespace current] "espresso has [setmd n_part] particles but [expr [::cgtools::utils::maxpartid $topology] +1] were specified in topology "
+        mmsg::err [namespace current] "espresso has [setmd n_part] particles but [expr [::cgtools::utils::maxpartid $topology] +1] were specified in topology "
     }
 }

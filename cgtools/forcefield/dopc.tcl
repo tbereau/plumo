@@ -52,7 +52,7 @@ lappend dopccharmmbeadlist $charmmbeadlist
 unset charmmbeadlist
 
 #moltypeid
-lappend moldopclist "0" 
+lappend moldopclist "2" 
 #molspec
 lappend moldopclist "DOPC" 
 #

@@ -133,7 +133,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
     }
 
-    if { [lindex [lindex $n_molslist 0] 0] == "1" } {
+    if { [lindex [lindex $n_molslist 0] 0] == "3" } {
       # It's a peptide
       if { !$sequenceset } {
         mmsg::err [namespace current] "Missing sequence for peptide"
@@ -151,6 +151,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       set nmols [lindex $mtp 1]
       set tpspec [::cgtools::utils::matchtype [lindex $mtp 0]]
       set nbeads_mol [llength [lindex [lindex $tpspec 2] 0]]
+
       # Create the topology for this lipid type
       set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]    
 
@@ -231,7 +232,6 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
     lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
   }
 
-  puts "here $n_molslist"
   # Optionally apply umbrella-sampling restraints
   foreach molUmb $umbrella_restraints {
     if { [lindex $molUmb 0] == [lindex [lindex $n_molslist 0] 0] } {
@@ -356,15 +356,15 @@ proc ::cgtools::generation::gen_peptide_topol { sequence } {
   set beadlist {}
   foreach resname $sequence {
     foreach partinfo_this_resi $partlist_per_res3letter {
-         set this_resi_name [lindex $partinfo_this_resi 0]
-         #puts "this_resi_name: $this_resi_name"
-         #puts "resname: $resname"
-         if { $resname == $this_resi_name } {
-           set beadlist_this_resi [lindex $partinfo_this_resi 1]
-           foreach thispartnum $beadlist_this_resi {
-        lappend beadlist $thispartnum
-               }
-         }
+      set this_resi_name [lindex $partinfo_this_resi 0]
+      #puts "this_resi_name: $this_resi_name"
+      #puts "resname: $resname"
+      if { $resname == $this_resi_name } {
+        set beadlist_this_resi [lindex $partinfo_this_resi 1]
+        foreach thispartnum $beadlist_this_resi {
+          lappend beadlist $thispartnum
+        }
+      }
     }
   }
   #puts "beadlist: $beadlist"
@@ -384,7 +384,7 @@ proc ::cgtools::generation::gen_peptide_topol { sequence } {
   unset dihelist
 
   #moltypeid
-  lappend molpeptidepartlist "1" 
+  lappend molpeptidepartlist "3" 
   #molspec
   lappend molpeptidepartlist "PROT" 
   #

@@ -146,10 +146,10 @@ namespace eval ::cgtools::espresso {
 
             # Initialize variable moltypelists in the namespace ::cgtools::utils
             ::cgtools::utils::initmoltypeskey $cgtools::moltypelists 
-            #puts "$cgtools::moltypelists"
-            #puts "$cgtools::ident"
-            #puts "$cgtools::system_specs"
-            #puts "$cgtools::setbox_l"
+            # puts "$cgtools::moltypelists"
+            # puts "$cgtools::ident"
+            # puts "$cgtools::system_specs"
+            # puts "$cgtools::setbox_l"
             # Initialize topology
             set topology [::cgtools::generation::generate_system $cgtools::system_specs $cgtools::setbox_l]
             #puts "topology= $topology"
