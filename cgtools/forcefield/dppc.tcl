@@ -52,7 +52,7 @@ lappend dppccharmmbeadlist $charmmbeadlist
 unset charmmbeadlist
 
 #moltypeid
-lappend moldppclist "1" 
+lappend moldppclist "2" 
 #molspec
 lappend moldppclist "DPPC" 
 #

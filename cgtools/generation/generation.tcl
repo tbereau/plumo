@@ -133,7 +133,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       mmsg::err [namespace current] "n_molslist not specified for [lindex $geometry 0]"
     }
 
-    if { [lindex [lindex $n_molslist 0] 0] == "3" } {
+    if { [lindex [lindex $n_molslist 0] 0] == "1" } {
       # It's a peptide
       if { !$sequenceset } {
         mmsg::err [namespace current] "Missing sequence for peptide"
@@ -384,7 +384,7 @@ proc ::cgtools::generation::gen_peptide_topol { sequence } {
   unset dihelist
 
   #moltypeid
-  lappend molpeptidepartlist "3" 
+  lappend molpeptidepartlist "1" 
   #molspec
   lappend molpeptidepartlist "PROT" 
   #
