@@ -45,7 +45,7 @@ proc ::cgtools::analysis::ti::setup_ti { {eqtime 0} {delta ""} } {
   }
   set pipe [open $file_ti $iotype]
   if { $newfile || $iotype == "w"} {
-    puts $pipe "\# time <dE/dlambda>_lambda"
+    puts $pipe "\# time dE/dlambda E"
   }
   close $pipe
 
@@ -89,8 +89,21 @@ proc ::cgtools::analysis::ti::analyze_ti { } {
     # Now revert back to original force field with lambda_i
     ::cgtools::forcefield::update_peptide_ff $lmbd
 
+    set epoto 0.0
+    # Sum up only peptide-lipid contributions
+    # lipid beads
+    for {set lb 0} {$lb < 8} {incr lb} {
+      # peptide beads
+      for {set pb 8} {$pb < 43} {incr pb} {
+        if { [catch {set epair [analyze energy nonbonded $lb $pb]}] } {
+          set epair 0.0
+        }
+        set epoto [expr "$epoto + $epair"]
+      }
+    }
+
     set pipe [open $file_ti a]
-    puts $pipe [format "%16.4f \t %9.4f" $currenttime $epot]
+    puts $pipe [format "%16.4f %9.4f %9.4f" $currenttime $epot $epoto]
     close $pipe
   }
 }
