@@ -1,5 +1,5 @@
-# Zun-Jing Wang 
-# 2011 August    
+# Zun-Jing Wang
+# 2011 August
 
 # Tristan Bereau
 # Spring 2013
@@ -8,9 +8,6 @@
 # Check that all interactions are compiled in
 require_feature LENNARD_JONES
 require_feature LENNARD_JONES_GENERIC
-if { $peptideb::softcore_flag != 0 } {
-  require_feature COS2
-}
 
 # The atom types in this peptide are respectively 8:N, 9:CA, 10: Pro-N (no H-bond), 11:C, 12:O, 15:term-N, 16:term-C
 # 20-39: CB (Side chain beads)
@@ -206,7 +203,7 @@ lappend bonded_parms [list 112 dihedral 1 $peptideb::k_imp_dih   $peptideb::angl
 # Dihedral for Oxygen
 lappend bonded_parms [list 119 dihedral 1 $peptideb::k_dih_omega $peptideb::pi]
 
-# Subtract Lennard-Jones for bonded partners    
+# Subtract Lennard-Jones for bonded partners
 lappend bonded_parms [list 113 subt_lj 0 $peptideb::max_length]
 
 # Virtual bond: deleted
@@ -310,7 +307,7 @@ set index_sc 20
 foreach name $peptideb::3letter_list {
     # No interaction with Gly
     if {$name != "GLY"} {
-  
+
   # interaction N and Sc
   set sigma [expr $peptideb::rvdw_N+$peptideb::rvdw_XXX]
   lappend nb_interactions \
@@ -335,7 +332,7 @@ foreach name $peptideb::3letter_list {
   set sigma [expr $peptideb::rvdw_C + $peptideb::rvdw_XXX]
   lappend nb_interactions \
       [list 16 $index_sc lennard-jones $peptideb::lj_eps $sigma [expr $peptideb::cut_factor*$sigma] $peptideb::lj_shift $peptideb::ljoffset]
-  
+
 
   # interaction Sc and Sc - Matrix of coefficients
   set index2_sc 20
@@ -372,18 +369,12 @@ unset epsilon
 # Softcore potentials (these initial values will not affect the original
 # potentials)
 set lambda    1.0
-set lambdaLJ  1.0
-set lambdaWCA 1.0
 set delta     0.0
 if { $peptideb::softcore_flag != 0 } {
   ::mmsg::send [namespace current] "Using softcore potentials"
   # Soft-core potential is turned on
   set lambda    $peptideb::lambda_coupling
-  # set lambdaLJ  [::cgtools::utils::max [expr 2*($lambda-0.5)] 0.0]
-  # set lambdaWCA [::cgtools::utils::min [expr 2* $lambda     ] 1.0]
-  set lambdaLJ  $lambda
-  set lambdaWCA $lambda
-  set delta     $peptideb::softcore_delta  
+  set delta     $peptideb::softcore_delta
 }
 
 ### Peptide-lipid interaction ###
@@ -394,7 +385,7 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     set wca_eps   $peptideb::lj_eps
     set wca_sig   [expr ($peptideb::rvdw_Ca + 3.)]
     set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                            -(1-$lambdaWCA)*$delta)]
+                            -(1-$lambda)*$delta)]
     set wca_shift 1.0
     set wca_off   0.0
     set wca_cap   0.0
@@ -404,21 +395,21 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
       $wca_cut $wca_shift $wca_off \
       12 6 4.0 4.0"
     if { $peptideb::softcore_flag != 0 } {
-      set wca_soft " 1.0 $lambdaWCA $delta"
+      set wca_soft " 1.0 $lambda $delta"
       append wca_command $wca_soft
 
     }
     lappend nb_interactions $wca_command
-    
+
     set wca_sig [expr ($peptideb::rvdw_N + 3.)]
     set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                            -(1-$lambdaWCA)*$delta)]
+                            -(1-$lambda)*$delta)]
     set wca_command "$lipid_i 8 lj-gen \
       $wca_eps $wca_sig \
       $wca_cut $wca_shift $wca_off \
       12 6 4.0 4.0"
     if { $peptideb::softcore_flag != 0 } {
-      set wca_soft " 1.0 $lambdaWCA $delta"
+      set wca_soft " 1.0 $lambda $delta"
       append wca_command $wca_soft
 
     }
@@ -426,13 +417,13 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
 
     set wca_sig [expr ($peptideb::rvdw_C + 3.)]
     set wca_cut [expr $wca_sig * sqrt(pow(2,1/3.) \
-                            -(1-$lambdaWCA)*$delta)]
+                            -(1-$lambda)*$delta)]
      set wca_command "$lipid_i 11 lj-gen \
       $wca_eps $wca_sig \
       $wca_cut $wca_shift $wca_off \
       12 6 4.0 4.0"
     if { $peptideb::softcore_flag != 0 } {
-      set wca_soft " 1.0 $lambdaWCA $delta"
+      set wca_soft " 1.0 $lambda $delta"
       append wca_command $wca_soft
 
     }
@@ -442,10 +433,10 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
 # input amino acid number
 # output interaction with all lipid bead types. Format:
 # {
-#   { CH_type CH_eps CH_sigma } 
-#   { PH_type PH_eps PH_sigma } 
-#   { GL_type GL_eps GL_sigma } 
-#   { ES_type ES_eps ES_sigma } 
+#   { CH_type CH_eps CH_sigma }
+#   { PH_type PH_eps PH_sigma }
+#   { GL_type GL_eps GL_sigma }
+#   { ES_type ES_eps ES_sigma }
 #   { AS_type AS_eps AS_sigma }
 #   { AE_type AE_eps AE_sigma }
 # }
@@ -510,7 +501,7 @@ proc aa_lipid_inter { aa_num } {
       return [list { "lj" 1.2 6.77 } { "wca" 1.0 9.82 } \
           { "lj" 7.5 5.46 } { "wca" 1.0 6.37 } \
           { "lj" 1.1 3.64 } { "lj" 1.2 3.64 }]
-  } 22 { # pro 
+  } 22 { # pro
       return [list { "lj" 1.0 6.20 } { "wca" 1.0 8.99 } \
           { "lj" 7.5 4.95 } { "wca" 1.0 0.60 } \
           { "wca" 1.0 4.68 } { "wca" 1.0 8.25 }]
@@ -554,25 +545,23 @@ proc aa_lipid_inter { aa_num } {
 set lipid_beads [list {0} {1} {2} {3 4} {5 6} {7}]
 set lj_offset 0.0
 set lj_cutoff 15.0
-# Cos2 interaction for implicit membrane environment
-set cos2_omega 3.0
 
 
 # loop over all amino acids
 for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
   # read in lipid-peptide parameters for side chain cb_type
   set interaction_aa_lipid [aa_lipid_inter $cb_type]
- 
+
   # loop over 6 different lipid bead types (as far as aa-lipid interaction is concerned)
   for { set bead_type 0 } { $bead_type < [llength $lipid_beads] } { incr bead_type } {
     # read interaction
     set inter_details [lindex $interaction_aa_lipid $bead_type]
     set inter_type [lindex $inter_details 0]
     set inter_eps [lindex $inter_details 1]
-    set inter_sig [lindex $inter_details 2] 
-    
+    set inter_sig [lindex $inter_details 2]
+
     # loop over all types of beads (e.g., AS -> AS & AD)
-    foreach type [lindex $lipid_beads $bead_type] {     
+    foreach type [lindex $lipid_beads $bead_type] {
       if { $inter_type == "lj" } {
         # Separate potential in two parts: repulsive (WCA-like) and attractive (LJ)
 
@@ -580,7 +569,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         set wca_eps   $inter_eps ;# Will need to incorporate lambda coupling
         set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                             -(1-$lambdaWCA)*$delta)]
+                             -(1-$lambda)*$delta)]
         # No shift -> Reproduce repulsive LJ potential
         set wca_shift 0.0
         # if { $cb_type == 40 || $cb_type == 41 } {
@@ -596,44 +585,40 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
           12 6 4.0 4.0"
         if { $peptideb::softcore_flag != 0 \
           } {
-          # && $cb_type != 40 && $cb_type != 41 
-          set wca_soft " 1.0 $lambdaWCA $delta"
+          # && $cb_type != 40 && $cb_type != 41
+          set wca_soft " 1.0 $lambda $delta"
           append wca_command $wca_soft
         }
         lappend nb_interactions $wca_command
 
-        # 2) attractive LJ-like. Vary only between 0.5 < lambda < 1.
-        #    Interaction is turned off at lambda <= 0.5.
+        # 2) attractive LJ-like.
         #    Lambda coupling only enters in the epsilon parameter.
-        #    Add cos2 interaction to gradually replace minimum of LJ by minimum of cos2.
-        set lj_eps   [expr $lambdaLJ * $inter_eps]
-        # if { $cb_type == 40 || $cb_type == 41 } {
-        #   set lj_eps $inter_eps
-        # }
+        set lj_eps   [expr $lambda * $inter_eps]
         set lj_sig   [expr $inter_sig * 1.0]
         set lj_cut   $lj_cutoff
         set lj_shift [calc_lj_shift $lj_sig $lj_cut]
         set lj_off   0.0
         set lj_cap   0.0
         set lj_min   $wca_cut
-        lappend nb_interactions [list $type $cb_type lennard-jones \
-          $lj_eps $lj_sig $lj_cut $lj_shift $lj_off $lj_cap $lj_min]
+        # lappend nb_interactions [list $type $cb_type lennard-jones \
+        #  $lj_eps $lj_sig $lj_cut $lj_shift $lj_off $lj_cap $lj_min]
+        # Alter using lj-gen and softcore
+        set lj_command "$type $cb_type lj-gen \
+          $lj_eps $lj_sig $lj_cut $lj_shift $lj_off \
+          12 6 4.0 4.0"
         if { $peptideb::softcore_flag != 0 \
-          && ($type == 5 || $type == 6 || $type == 7) } {
-          # && $cb_type != 40 && $cb_type != 41 
-          # cos2 interaction only for AS, AD, AE beads.
-          set cos2_eps  [expr (1-$lambdaLJ) * $inter_eps]
-          set cos2_roff [expr $wca_sig * pow(2,1/6.)]
-          set cos2_command "$type $cb_type cos2 $cos2_eps \
-            $cos2_roff $cos2_omega"
-          lappend nb_interactions $cos2_command
+          } {
+          # && $cb_type != 40 && $cb_type != 41
+          set lj_soft " 1.0 $lambda $delta"
+          append lj_command $lj_soft
         }
+        lappend nb_interactions $lj_command
 
       } elseif { $inter_type == "wca" } {
         set wca_eps   $inter_eps
         set wca_sig   [expr $inter_sig * 1.0]
         set wca_cut   [expr $wca_sig * sqrt(pow(2,1/3.) \
-                                -(1-$lambdaWCA)*$delta)]
+                                -(1-$lambda)*$delta)]
         set wca_shift 1.0
         # if { $cb_type == 40 || $cb_type == 41} {
         #   # Termini; don't scale them
@@ -648,7 +633,7 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         if { $peptideb::softcore_flag != 0 \
           } {
           # && $cb_type != 40 && $cb_type != 41
-          set wca_soft " 1.0 $lambdaWCA $delta"
+          set wca_soft " 1.0 $lambda $delta"
           append wca_command $wca_soft
 
         }
@@ -662,5 +647,3 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
     }
   }
 }
-
-

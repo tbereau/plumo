@@ -1,5 +1,5 @@
 # Author: Zun-Jing Wang
-# 2008 Sep - Dec. 
+# 2008 Sep - Dec.
 
 package require ::mmsg 1.0.0
 package require ::cgtools::utils 1.0.0
@@ -12,7 +12,7 @@ namespace eval ::cgtools::analysis {
     variable docommands
     variable suffix
     variable topology
-    variable time 
+    variable time
     variable haveimportedchildren 0
     variable mgrid
     variable stray_cut_off
@@ -40,6 +40,7 @@ source [file join [file dirname [info script]] diffusion.tcl]
 source [file join [file dirname [info script]] distance_partbilayer.tcl]
 source [file join [file dirname [info script]] fep.tcl]
 source [file join [file dirname [info script]] hbond.tcl]
+source [file join [file dirname [info script]] thermodynamic_integration.tcl]
 
 
 # ::cgtools::analysis::print_averages --
@@ -71,7 +72,7 @@ proc ::cgtools::analysis::print_averages { } {
 # ::cgtools::analysis::reset_averages --
 #
 # Reset all of the average storage variables and counters to zero
-#   
+#
 #
 # Note: Power analysis and densityprofiles are not reset since they
 # generally require averages over the entire simulation. Flip-flop is
@@ -104,7 +105,7 @@ proc ::cgtools::analysis::do_analysis { } {
     variable known_flags
 
     #analyze set "topo_part_sync"
-    
+
 
     # Now run the setup commands for each of the required analysis commands
     set analyzeprefix "analyze_"
@@ -132,7 +133,7 @@ proc ::cgtools::analysis::do_analysis { } {
 #
 #        commands: This argument should consist of a list of
 #                    switches that determine which quantites should be
-#                    analyzed 
+#                    analyzed
 #
 proc ::cgtools::analysis::setup_analysis { commands args } {
 
@@ -176,7 +177,7 @@ proc ::cgtools::analysis::setup_analysis { commands args } {
     set iotype $params(iotype)
     set suffix "_$params(suffix)"
 
-    # Import commands from all child namespaces 
+    # Import commands from all child namespaces
     if (!$haveimportedchildren) {
         set children "[namespace children [namespace current]]"
         foreach child $children {
