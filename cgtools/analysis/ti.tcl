@@ -23,21 +23,21 @@ proc ::cgtools::analysis::ti::printav_ti { } {
   # Do nothing
 }
 
-proc ::cgtools::analysis::ti::setup_ti { lambda {eqtime 0} {delta ""} } {
+proc ::cgtools::analysis::ti::setup_ti { {eqtime 0} {delta ""} } {
   global ::cgtools::analysis::outputdir
   global ::cgtools::analysis::iotype
   global ::cgtools::analysis::suffix
   variable file_ti
   variable tiequitime
   variable lmbd
-  variable ::cgtools::forcefield::peptideb::lambda_coupling
-  variable ::cgtools::forcefield::peptideb::softcore_flag
-  variable ::cgtools::forcefield::peptideb::softcore_delta
+  variable ::cgtools::lambda_coupling
+  variable ::cgtools::softcore_flag
+  variable ::cgtools::softcore_delta
 
-  set lmbd $lambda
+  set lmbd $lambda_coupling
   set tiequitime $eqtime
 
-  set file_ti "$outputdir/time_vs_ti_$suffix"
+  set file_ti "$outputdir/time_vs_ti_$lmbd"
   if { [file exists $file_ti] } {
     set newfile 0
   } else {
@@ -45,7 +45,7 @@ proc ::cgtools::analysis::ti::setup_ti { lambda {eqtime 0} {delta ""} } {
   }
   set pipe [open $file_ti $iotype]
   if { $newfile || $iotype == "w"} {
-    puts $pipe "\# time E(lambda_i) E(lambda_i+1) deltaE <deltaF>"
+    puts $pipe "\# time <dE/dlambda>_lambda"
   }
   close $pipe
 
@@ -55,7 +55,7 @@ proc ::cgtools::analysis::ti::setup_ti { lambda {eqtime 0} {delta ""} } {
     set softcore_delta $delta
   }
   # Set force field -- simulate at lambda_i
-  ::cgtools::forcefield::update_peptide_ff $lmbd_i
+  ::cgtools::forcefield::update_peptide_ff $lmbd
 }
 
 proc ::cgtools::analysis::ti::analyze_ti { } {
@@ -67,14 +67,25 @@ proc ::cgtools::analysis::ti::analyze_ti { } {
   variable tiequitime
   variable lmbd
   variable ::cgtools::systemtemp
-  variable ::cgtools::forcefield::peptideb::lambda_coupling
+  variable ::cgtools::lambda_coupling
 
   set currenttime [setmd time]
   if { $currenttime >= $tiequitime } {
     # Now change of force field with original Hamiltonian (lambda = 1)
     ::cgtools::forcefield::update_peptide_ff 1.0
 
-    set epot [expr [analyze energy total] - [analyze energy kinetic]]
+    set epot 0.0
+    # Sum up only peptide-lipid contributions
+    # lipid beads
+    for {set lb 0} {$lb < 8} {incr lb} {
+      # peptide beads
+      for {set pb 8} {$pb < 43} {incr pb} {
+        if { [catch {set epair [analyze energy nonbonded $lb $pb]}] } {
+          set epair 0.0
+        }
+        set epot [expr "$epot + $epair"]
+      }
+    }
     # Now revert back to original force field with lambda_i
     ::cgtools::forcefield::update_peptide_ff $lmbd
 

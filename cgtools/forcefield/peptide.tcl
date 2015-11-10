@@ -9,6 +9,10 @@
 require_feature LENNARD_JONES
 require_feature LENNARD_JONES_GENERIC
 
+variable ::cgtools::softcore_flag
+variable ::cgtools::lambda_coupling
+variable ::cgtools::softcore_delta
+
 # The atom types in this peptide are respectively 8:N, 9:CA, 10: Pro-N (no H-bond), 11:C, 12:O, 15:term-N, 16:term-C
 # 20-39: CB (Side chain beads)
 #
@@ -149,10 +153,10 @@ if { [llength [inter]] == 0 } {
   source [file join [file dirname [info script]] peptide_sc_parameters.tcl ]
 
   # Check for LJGEN_SOFTCORE feature if it's turned on in the simulation
-  if { ![info exists peptideb::softcore_flag] } {
-    set peptideb::softcore_flag 0
+  if { ![info exists ::cgtools::softcore_flag] } {
+    set softcore_flag 0
   }
-  if { $peptideb::softcore_flag != 0 } {
+  if { $::cgtools::softcore_flag != 0 } {
     require_feature LJGEN_SOFTCORE
   }
 }
@@ -370,11 +374,11 @@ unset epsilon
 # potentials)
 set lambda    1.0
 set delta     0.0
-if { $peptideb::softcore_flag != 0 } {
-  ::mmsg::send [namespace current] "Using softcore potentials"
+if { $softcore_flag != 0 } {
   # Soft-core potential is turned on
-  set lambda    $peptideb::lambda_coupling
-  set delta     $peptideb::softcore_delta
+  set lambda    $lambda_coupling
+  set delta     $softcore_delta
+  ::mmsg::send [namespace current] "Using softcore potentials with lambda $lambda"
 }
 
 ### Peptide-lipid interaction ###

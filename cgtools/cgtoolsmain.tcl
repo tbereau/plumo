@@ -92,6 +92,10 @@ namespace eval ::cgtools {
     variable temp_peptide -1.
     # Ragtime software for helicity analysis
     variable ragtime_path
+    # Alchemical transformations
+    variable softcore_flag 0
+    variable lambda_coupling 1.0
+    variable softcore_delta 0.25
 
     # Set default system parameters.
     set thermo Langevin
@@ -231,7 +235,7 @@ namespace eval ::cgtools {
         "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}" } errmsg ] } {
         puts "Warning: $errmsg"
     }
-    set message_allowlist { :: $this ::cgtools ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
+    set message_allowlist { :: $this ::cgtools ::cgtools::forcefield ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
     ::mmsg::send $this "Assigning children namespaces"
     set children [namespace children ::cgtools::analysis]
     foreach child $children {
