@@ -1,4 +1,4 @@
-# Zun-Jing Wang 1st version:  2008 Sep. 23 - Oct. 9, 
+# Zun-Jing Wang 1st version:  2008 Sep. 23 - Oct. 9,
 #		modification: 2009 Sep.02
 # Tristan Bereau: 2013. Introduce FEP.
 #------------------------------------------------------------#
@@ -35,14 +35,14 @@ set result [package require ::mmsg]
 # ---------------------------------------------------------- #
 
 # ---- Process Command Line Args --------------------------- #
-set options { 
+set options {
     {n.arg      1    set the number of processors }
 }
 
-set usage "Usage: 
+set usage "Usage:
 \tcgtoolsmain.tcl <CONFIG_NAME>
-     or 
-\tEspresso cgtoolsmain.tcl <CONFIG_NAME> 
+     or
+\tEspresso cgtoolsmain.tcl <CONFIG_NAME>
      * Possible options :
 \t-replica \[-connect HOST\] \t\t starts a replica exchange simulation
 \t-hremd \[-connect HOST\] \[-port PORT\] \t\t Hamiltonian Replica Exchange MD
@@ -56,7 +56,7 @@ if { $argc<1} {
 }
 
 namespace eval ::cgtools {
-    variable moltypelists 
+    variable moltypelists
 
     set this [namespace current]
     ::mmsg::setnamespaces $this
@@ -135,7 +135,7 @@ namespace eval ::cgtools {
     # Ragtime -- Useful to analyze H-bonds
     set ragtime_path "$cgtoolsdir/../misc.scripts/ragtime/ragtime.tcl"
 
-    # Read the parameter file. 
+    # Read the parameter file.
     set paramsfile [lindex $argv 0]
     set nprocessors $params(n)
     ::mmsg::send $this "using paramsfile: $paramsfile"
@@ -173,7 +173,7 @@ namespace eval ::cgtools {
         }
     }
 
-    # MPI distribution of random 
+    # MPI distribution of random
     if { [lindex geometry 1] == "random"} {
         if {[setmd n_nodes]==8} {
             setmd node_grid 2 2 2
@@ -195,7 +195,7 @@ namespace eval ::cgtools {
                 if {[lindex $argv [expr $k+1]] == "-port" } {
                     set tcp_port [lindex $argv [expr $k+2]]
                     incr k 2
-                } 
+                }
             } "-hremd" {
                 set hremd 1
                 ::mmsg::send $this "Hamiltonian replica exchange MD turned on"
@@ -206,7 +206,7 @@ namespace eval ::cgtools {
                 if {[lindex $argv [expr $k+1]] == "-port" } {
                     set tcp_port [lindex $argv [expr $k+2]]
                     incr k 2
-                } 
+                }
             } "-new" {
                 set newcomp 1
                 ::mmsg::send $this "Start a new simulation, i.e., will NOT be resumed at the last checkpoint."
@@ -221,7 +221,7 @@ namespace eval ::cgtools {
                 incr k
             }
         }
-    } 
+    }
     ::mmsg::send $this "Finished parsing options."
 
     # ---------------------------------------------------------- #
@@ -256,6 +256,12 @@ namespace eval ::cgtools {
     # Read forcefield
     ::mmsg::send $this "Reading force field"
     ::cgtools::forcefield::source_all_ff
+
+    # Optionally, read additional commands from user
+    if { [info exists userscript] } {
+      puts "Reading user script $userscript"
+      source $userscript
+    }
 
     # Erase all the directory we're not resuming
     if { [info exists newcomp] } {
@@ -384,7 +390,7 @@ namespace eval ::cgtools {
         # Replica exchange / HREMD is off
 
         if { [info exists hybrid] } {
-            # Start hybrid simulation 
+            # Start hybrid simulation
             ::mmsg::send $this "Starting an Hybrid computation at temperature : $systemtemp"
             espresso::hybrid_init
         } else {
@@ -393,9 +399,9 @@ namespace eval ::cgtools {
                 ::mmsg::send $this "Starting an Annealing computation at temperature : $systemtemp"
                 espresso::annealing_init
             } else {
-                # Normal MD simulation 
+                # Normal MD simulation
                 ::mmsg::send $this "Starting an Espresso computation at temperature : $systemtemp"
-                espresso::espresso_init 	
+                espresso::espresso_init
             }
         }
     }
@@ -404,4 +410,3 @@ namespace eval ::cgtools {
     mmsg::send $this "\n\nfinished"
     exit 1
 }
-
