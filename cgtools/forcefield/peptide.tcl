@@ -394,15 +394,15 @@ for { set lipid_i 0} { $lipid_i < 8 } { incr lipid_i } {
     set wca_off   0.0
     set wca_cap   0.0
     set wca_soft  ""
+    if { $peptideb::softcore_flag != 0 } {
+      set wca_shift $lambda
+      set wca_soft " 1.0 $lambda $delta"
+      append wca_command $wca_soft
+    }
     set wca_command "$lipid_i 9 lj-gen \
       $wca_eps $wca_sig \
       $wca_cut $wca_shift $wca_off \
       12 6 4.0 4.0"
-    if { $peptideb::softcore_flag != 0 } {
-      set wca_soft " 1.0 $lambda $delta"
-      append wca_command $wca_soft
-
-    }
     lappend nb_interactions $wca_command
 
     set wca_sig [expr ($peptideb::rvdw_N + 3.)]
@@ -631,16 +631,15 @@ for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
         set wca_off   0.0
         set wca_cap   0.0
         set wca_soft  ""
+        if { $peptideb::softcore_flag != 0 } {
+          set wca_shift $lambda
+          set wca_soft " 1.0 $lambda $delta"
+          append wca_command $wca_soft
+        }
         set wca_command "$type $cb_type lj-gen \
           $wca_eps $wca_sig $wca_cut $wca_shift $wca_off \
           12 6 4.0 4.0"
-        if { $peptideb::softcore_flag != 0 \
-          } {
-          # && $cb_type != 40 && $cb_type != 41
-          set wca_soft " 1.0 $lambda $delta"
-          append wca_command $wca_soft
 
-        }
         lappend nb_interactions $wca_command
       } elseif { $inter_type == "no" } {
         # No interaction
