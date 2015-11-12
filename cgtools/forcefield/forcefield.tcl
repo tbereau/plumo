@@ -39,6 +39,12 @@ namespace eval ::cgtools::forcefield {
         source $::cgtools::cgtoolsdir/forcefield/peptide.tcl
         ::cgtools::utils::set_nb_interactions $nb_interactions
         source_hbond_ff
+        # Optionally, read additional commands from user
+        variable ::cgtools::userscript
+        if { [info exists userscript] } {
+          ::mmsg::send [namespace current] "Reading user script $userscript"
+          source $userscript
+        }
         integrate 0
     }
 
