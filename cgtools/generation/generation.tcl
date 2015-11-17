@@ -1,11 +1,11 @@
 # cgtools::generation --
 #
 # Generate molecular topology, parameter and positions
-# 
+#
 # Author: Zun-Jing Wang
 # Sep. 25 2008
 
-package require ::mmsg 
+package require ::mmsg
 package require ::cgtools::utils
 
 package provide ::cgtools::generation 1.0.0
@@ -19,7 +19,7 @@ namespace eval ::cgtools::generation {
   variable topology
   variable boxl
   variable notopo
-  # Bookkeeps coordinates read in each file. Useful when reading 
+  # Bookkeeps coordinates read in each file. Useful when reading
   # the same file for different types of molecules (e.g., proteins AND lipids).
   variable coordinput []
 
@@ -44,11 +44,11 @@ namespace eval ::cgtools::generation {
   source [file join [file dirname [info script]] placeparticles.tcl]
 }
 
-# ::cgtools::generation::generate_system -- 
+# ::cgtools::generation::generate_system --
 #
 # A large scale wrapper routine for all of the system setup commands
 # in this module.
-# 
+#
 # This routine should allow flexible use of multiple geometrical
 # structures and topologies in a simulation.  A complete topology and
 # geometry specification is provided for each object (eg. singlemol,
@@ -58,21 +58,21 @@ namespace eval ::cgtools::generation {
 # end.
 #
 # Arguments:
-# 
+#
 # system_specs: A list of specified system objects.  Each object is
 # itself a list of the form < geometry n_lipidslist beads_per_mol >
-# where geometry may be any allowable geometry (eg singlemol, bilayer 
+# where geometry may be any allowable geometry (eg singlemol, bilayer
   # etc). <n_lipidslist> is a list containing the number of molecules of
 # each of the molecule types in this object and beads_per_mol
 # specifies the number of particles in each of the molecule types.
 #
-# 
+#
 proc ::cgtools::generation::generate_system { system_specs iboxl } {
   ::mmsg::send [namespace current] "setting up system "
 
   # The molecule types spec should be globally accessible
   variable boxl
-  variable topology 
+  variable topology
   variable notopo
 
   set boxl $iboxl
@@ -153,7 +153,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       set nbeads_mol [llength [lindex [lindex $tpspec 2] 0]]
 
       # Create the topology for this lipid type
-      set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]    
+      set topo [create_simple_topo $nmols $nbeads_mol -moltype  $thismoltypeid -startpart $currpid ]
 
       # Just in case zero molecules were specified we need
       # to check if topo was actually created at all by the
@@ -169,12 +169,12 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
       }
     }
 
-    
+
     # Join all of the previously made topologies
     set first 1
     foreach topo $topolist {
-      if { $first } { 
-        set topology $topo 
+      if { $first } {
+        set topology $topo
         set first 0
       } else {
         set topology [join_topos $topology $topo]
@@ -270,7 +270,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   # Join all of the previously made topologies
   set first 1
   foreach topo $topologieslist {
-    if { $first } { 
+    if { $first } {
       set topology $topo
       set first 0
     } else {
@@ -297,7 +297,7 @@ proc ::cgtools::generation::generate_system { system_specs iboxl } {
   #   variable ::cgtools::membrane_restraint_dist
   #   lipid_z_restraints $membrane_restraint_k $membrane_restraint_dist
   # }
-  
+
   # puts "topology= $topology"
   set topology [sort_topo $topology]
   return $topology
@@ -338,7 +338,7 @@ proc ::cgtools::generation::lipid_z_restraints { k_res dist } {
       # Apply constraint on GL bead (type 1+2)
       set lipidBead [lindex $mol 3]
       if {[expr [lindex [part $lipidBead print pos] 2] - $memcomz] > 0.} {
-        part $lipidBead bond 200 $partID_membrane_midplane        
+        part $lipidBead bond 200 $partID_membrane_midplane
       } else {
         part $lipidBead bond 201 $partID_membrane_midplane
       }
@@ -384,13 +384,13 @@ proc ::cgtools::generation::gen_peptide_topol { sequence } {
   unset dihelist
 
   #moltypeid
-  lappend molpeptidepartlist "1" 
+  lappend molpeptidepartlist "1"
   #molspec
-  lappend molpeptidepartlist "PROT" 
+  lappend molpeptidepartlist "PROT"
   #
-  lappend molpeptidepartlist $respartlist 
-  lappend molpeptidepartlist $resparttypelist 
-  lappend molpeptidepartlist $respartcharmmbeadlist 
+  lappend molpeptidepartlist $respartlist
+  lappend molpeptidepartlist $resparttypelist
+  lappend molpeptidepartlist $respartcharmmbeadlist
   #puts "molpeptidepartlist: $molpeptidepartlist"
   #exit
   return $molpeptidepartlist
@@ -416,7 +416,7 @@ proc ::cgtools::generation::get_trappedmols {  } {
           if { [lindex $fmol 0] == [lindex $mol 1] } {
            lset trappedmols $j 0 $i
            set didntfindmol 0
-           break      
+           break
          }
        }
        if { $didntfindmol } {
