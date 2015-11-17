@@ -235,7 +235,7 @@ namespace eval ::cgtools {
         "{:: [namespace children ::cgtools] [namespace children ::parallel_tempering]}" } errmsg ] } {
         puts "Warning: $errmsg"
     }
-    set message_allowlist { :: $this ::cgtools ::cgtools::forcefield ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
+    set message_allowlist { :: $this ::cgtools ::cgtools::utils ::cgtools::generation ::cgtools::analysis ::cgtools::espresso}
     ::mmsg::send $this "Assigning children namespaces"
     set children [namespace children ::cgtools::analysis]
     foreach child $children {
