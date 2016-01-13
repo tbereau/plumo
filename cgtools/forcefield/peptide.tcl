@@ -399,17 +399,17 @@ if { $softcore_flag != 0 } {
 proc aa_lipid_inter { aa_num } {
     switch -glob $aa_num \
   8 { # backbone N
-      return [list { "lj" 1.0 6.0 } { "wca" 1.0 6.0 } \
-      { "lj" 1.0 6.0 } { "wca" 1.0 4.0 } \
-      { "wca" 1.0 6.0 } { "wca" 1.0 10.0 }]
+      return [list { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 }]
   } 9 { # backbone Ca
-    return [list { "lj" 1.0 6.0 } { "wca" 1.0 6.0 } \
-    { "lj" 1.0 6.0 } { "wca" 1.0 4.0 } \
-    { "wca" 1.0 6.0 } { "wca" 1.0 10.0 }]
+      return [list { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 }]
   } 11 { # backbone C
-    return [list { "lj" 1.0 6.0 } { "wca" 1.0 6.0 } \
-    { "lj" 1.0 6.0 } { "wca" 1.0 4.0 } \
-    { "wca" 1.0 6.0 } { "wca" 1.0 10.0 }]
+      return [list { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 } \
+      { "no"  0.0  0.0 } { "no"  0.0  0.0 }]
   } 21 { # ala
       return [list { "lj" 1.0 5.96 } { "wca" 1.0 9.54 } \
       { "lj" 4.5 5.26 } { "wca" 1.0 4.61 } \
