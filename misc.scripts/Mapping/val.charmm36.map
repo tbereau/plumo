@@ -1,0 +1,40 @@
+[ molecule ]
+VAL
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    HN   N
+    3    CA   CA
+    4    HA   CA
+    5    CB   CB
+    6    HB   CB
+    8   CG1   CB
+    9   HG11  CB
+   10   HG12  CB
+   11   HG13  CB
+   12   CG2   CB
+   13   HG21  CB
+   14   HG22  CB
+   15   HG23  CB
+   16     C   C
+   17     O   O
+
+[ chiral ]
+  CB     CA    N    C
+  HB     CA    N    C
+
+[ chiral ]
+  HA     CA    N    CB    C ; L-Val
+; HA     CA    N    C    CB ; D-Val
+
+[ out ]
+  CG2  CB CG1 CA
+  HG21 CB CG1 CA
+  HG22 CB CG1 CA
+  HG23 CB CG1 CA

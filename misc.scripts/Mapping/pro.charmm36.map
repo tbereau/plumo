@@ -1,0 +1,33 @@
+[ molecule ]
+PRO
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    CD   N
+    3   HD1   N
+    4   HD2   N
+    5    CA   CA
+    6    HA   CA
+    7    CB   CB
+    8   HB1   CB
+    9   HB2   CB
+   10    CG   CB
+   11   HG1   CB
+   12   HG2   CB
+   13     C   C
+   14     O   O
+
+[ chiral ]
+  CB     CA    N    C
+  HB1    CA    N    C
+  HB2    CA    N    C
+
+[ chiral ]
+  HA     CA    N    CB    C ; L-Pro
+; HA     CA    N    C    CB ; D-Pro

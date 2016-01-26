@@ -1,0 +1,16 @@
+[ molecule ]
+ALA
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+gromos
+
+[ atoms ]
+    1     N    N
+    2     H    N
+    3    CA    CA
+    4    CB    CB
+    5     C    C
+    6     O    O

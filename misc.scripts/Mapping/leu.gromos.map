@@ -1,0 +1,19 @@
+[ molecule ]
+LEU
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+gromos
+
+[ atoms ]
+    1     N   N
+    2     H   N
+    3    CA   CA
+    4    CB   CB
+    5    CG   CB
+    6   CD1   CB
+    7   CD2   CB
+    8     C   C
+    9     O   O

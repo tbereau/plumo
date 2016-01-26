@@ -1,0 +1,48 @@
+[ molecule ]
+ILE
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    HN   N
+    3    CA   CA
+    4    HA   CA
+    5    CB   CB
+    6    HB   CB
+    7   CG2   CB
+    8  HG21   CB
+    9  HG22   CB
+   10  HG23   CB
+   11   CG1   CB
+   12  HG11   CB
+   13  HG12   CB
+   14    CD   CB
+   15   HD1   CB
+   16   HD2   CB
+   17   HD3   CB
+   18     C   C
+   19     O   O
+
+[ chiral ]
+  CB     CA    N    C
+  HB1    CA    N    C
+  HB2    CA    N    C
+
+[ chiral ]
+  HA     CA    N    CB    C ; L-Ile
+; HA     CA    N    C    CB ; D-Ile
+
+[ out ]
+CG2 CB CG1 CA
+HG21 CB CG1 CA
+HG22 CB CG1 CA
+HG23 CB CG1 CA
+
+[ chiral ]
+  HB     CB    CA   CG2   CG1  ; 3S stereoisomer (natural form)
+; HB     CB    CA   CG1   CG2  ; 3R stereoisomer

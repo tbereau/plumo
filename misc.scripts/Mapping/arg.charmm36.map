@@ -1,0 +1,60 @@
+[ molecule ]
+ARG
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    HN   N
+    3    CA   CA
+    4    HA   CA
+    5    CB   CB
+    6   HB1   CB
+    7   HB2   CB
+    8    CG   CB
+    9   HG1   CB
+   10   HG2   CB
+   11    CD   CB
+   12   HD1   CB
+   13   HD2   CB
+   14    NE   CB
+   15    HE   CB
+   16    CZ   CB
+   17   NH1   CB
+   18  HH11   CB
+   19  HH12   CB
+   20   NH2   CB
+   21  HH21   CB
+   22  HH22   CB
+   23     C   C
+   24     O   O
+
+[ chiral ]
+  CB     CA    N    C
+  HB1    CA    N    C
+  HB2    CA    N    C
+[ chiral ]
+  HA     CA    N    CB    C ; L-Arg
+; HA     CA    N    C    CB ; D-Arg
+
+
+; The cis/trans are added to ensure proper
+; splitting of the guanidinium group
+
+[ trans ]
+; Because of the use of normalized vectors, this makes sense:
+  NH1    CZ    NE    HE
+
+[ out ]
+  NH2    CZ    NE    NH1
+  NH1    CZ    NE    NH2
+
+[ out ]
+ HH11    NH1   CZ   HH12
+ HH12    NH1   CZ   HH11
+ HH21    NH2   CZ   HH22
+ HH22    NH2   CZ   HH21

@@ -1,0 +1,179 @@
+[ molecule ]
+POPC
+
+[ plum ]
+CH PH GL ES1 AS11 AS12 AS13 AS14 AE15 ES2 AS21 AS22 AD23 AS24 AS25 AE26
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N    CH
+    2   C12    CH
+    3   C13    CH
+    4   C14    CH
+    5   C15    CH
+    6  H12A    CH
+    7  H12B    CH
+    8  H13A    CH
+    9  H13B    CH
+   10  H13C    CH
+   11  H14A    CH
+   12  H14B    CH
+   13  H14C    CH
+   14  H15A    CH
+   15  H15B    CH
+   16  H15C    CH
+   17   C11    CH
+   18  H11A    CH
+   19  H11B    CH
+   20     P    PH
+   21   O13    PH
+   22   O14    PH
+   23   O12    PH
+   24   O11    PH
+   25    C1    GL
+   26    HA    GL
+   27    HB    GL
+   28    C2    GL
+   29    HS    GL
+   30   O21    ES2
+   31   C21    ES2
+   32   O22    ES2
+   33   C22    ES2
+   34   H2R    ES2
+   35   H2S    ES2
+   36    C3    GL
+   37    HX    GL
+   38    HY    GL
+   39   O31    ES1
+   40   C31    ES1
+   41   O32    ES1
+   42   C32    ES1
+   43   H2X    ES1
+   44   H2Y    ES1
+   45   C23    AS21
+   46   H3R    AS21
+   47   H3S    AS21
+   48   C24    AS21
+   49   H4R    AS21
+   50   H4S    AS21
+   51   C25    AS21
+   52   H5R    AS21
+   53   H5S    AS21
+   54   C26    AS22
+   55   H6R    AS22
+   56   H6S    AS22
+   57   C27    AS22
+   58   H7R    AS22
+   59   H7S    AS22
+   60   C28    AS22
+   61   H8R    AS22
+   62   H8S    AS22
+   63   C29    AD23
+   64   H91    AD23
+   65  C210    AD23
+   66  H101    AD23
+   67  C211    AS24
+   68  H11R    AS24
+   69  H11S    AS24
+   70  C212    AS24
+   71  H12R    AS24
+   72  H12S    AS24
+   73  C213    AS24
+   74  H13R    AS24
+   75  H13S    AS24
+   76  C214    AS25
+   77  H14R    AS25
+   78  H14S    AS25
+   79  C215    AS25
+   80  H15R    AS25
+   81  H15S    AS25
+   82  C216    AS25
+   83  H16R    AS25
+   84  H16S    AS25
+   85  C217    AE26
+   86  H17R    AE26
+   87  H17S    AE26
+   88  C218    AE26
+   89  H18R    AE26
+   90  H18S    AE26
+   91  H18T    AE26
+   92   C33    AS11
+   93   H3X    AS11
+   94   H3Y    AS11
+   95   C34    AS11
+   96   H4X    AS11
+   97   H4Y    AS11
+   98   C35    AS11
+   99   H5X    AS11
+  100   H5Y    AS11
+  101   C36    AS12
+  102   H6X    AS12
+  103   H6Y    AS12
+  104   C37    AS12
+  105   H7X    AS12
+  106   H7Y    AS12
+  107   C38    AS12
+  108   H8X    AS12
+  109   H8Y    AS12
+  110   C39    AS13
+  111   H9X    AS13
+  112   H9Y    AS13
+  113  C310    AS13
+  114  H10X    AS13
+  115  H10Y    AS13
+  116  C311    AS13
+  117  H11X    AS13
+  118  H11Y    AS13
+  119  C312    AS14
+  120  H12X    AS14
+  121  H12Y    AS14
+  122  C313    AS14
+  123  H13X    AS14
+  124  H13Y    AS14
+  125  C314    AS14
+  126  H14X    AS14
+  127  H14Y    AS14
+  128  C315    AE15
+  129  H15X    AE15
+  130  H15Y    AE15
+  131  C316    AE15
+  132  H16X    AE15
+  133  H16Y    AE15
+  134  H16Z    AE15
+
+;making R stereoisomer- placing HS
+[chiral]
+HS C2 O21 C1 C3
+
+; acyl esters
+[trans]
+C22 C21 O21 C2
+[ out ]
+O22 C21 O21 C22
+[trans]
+C32 C31 O31 C3
+[out]
+O32 C31 O31 C32
+
+;cis bonds in lipind chains
+[ out ]
+H9R C29 C28 C210
+[ trans ]
+H10R C210 C29 C28
+[ out ]
+C211 C210 C29 H10R
+
+;;;making a choline group
+[out]
+C14 N C13 C12
+H14A N C13 C12
+H14B N C13 C12
+H14C N C13 C12
+
+[ chiral ]
+C15 N C12 C13 C14
+H15A N C12 C13 C14
+H15B N C12 C13 C14
+H15C N C12 C13 C14

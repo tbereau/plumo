@@ -1,0 +1,44 @@
+[ molecule ]
+LEU
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    HN   N
+    3    CA   CA
+    4    HA   CA
+    5    CB   CB
+    6   HB1   CB
+    7   HB2   CB
+    8    CG   CB
+    9    HG   CB
+   10   CD1   CB
+   11  HD11   CB
+   12  HD12   CB
+   13  HD13   CB
+   14   CD2   CB
+   15  HD21   CB
+   16  HD22   CB
+   17  HD23   CB
+   18     C   C
+   19     O   O
+
+[ chiral ]
+  CB     CA    N    C
+  HB1    CA    N    C
+  HB2    CA    N    C
+
+[ chiral ]
+  HA     CA    N    CB    C ; L-Leu
+; HA     CA    N    C    CB ; D-Leu
+
+[ out ]
+CD2  CG CD1 CB
+HD21 CG CD1 CB
+HD22 CG CD1 CB
+HD23 CG CD1 CB

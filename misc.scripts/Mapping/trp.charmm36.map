@@ -1,0 +1,52 @@
+[ molecule ]
+TRP
+
+[ plum ]
+N CA CB C O
+
+[ mapping ]
+charmm36
+
+[ atoms ]
+    1     N   N
+    2    HN   N
+    3    CA   CA
+    4    HA   CA
+    5    CB   CB
+    6   HB1   CB
+    7   HB2   CB
+    8    CG   CB
+    9   CD1   CB
+   10   HD1   CB
+   11   NE1   CB
+   12   HE1   CB
+   13   CE2   CB
+   14   CD2   CB
+   15   CE3   CB
+   16   HE3   CB
+   17   CZ3   CB
+   18   HZ3   CB
+   19   CZ2   CB
+   20   HZ2   CB
+   21   CH2   CB
+   22   HH2   CB
+   23     C   C
+   24     O   O
+
+[ trans ]
+CB  CG  CD2 CE2
+HD1 CD1 NE1 CE2
+HE1 NE1 CD1 CG
+HE3 CE3 CD2 CE2
+HZ2 CZ2 CE2 CD2
+HZ3 CZ3 CE3 CD2
+HH2 CH2 CZ3 CE3
+
+[ chiral ]
+  CB     CA    N    C
+  HB1    CA    N    C
+  HB2    CA    N    C
+
+[ chiral ]
+  HA     CA    N    CB    C ; L-Trp
+; HA     CA    N    C    CB ; D-Trp
