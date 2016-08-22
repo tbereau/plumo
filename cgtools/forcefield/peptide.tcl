@@ -14,7 +14,7 @@ variable ::cgtools::lambda_coupling
 variable ::cgtools::softcore_delta
 
 # The atom types in this peptide are respectively 8:N, 9:CA, 10: Pro-N (no H-bond), 11:C, 12:O, 15:term-N, 16:term-C
-# 20-39: CB (Side chain beads)
+# 20-45: CB (Side chain beads)
 #
 ############
 # WARNING: ionizable residues are parametrized in their charged form.
@@ -33,18 +33,18 @@ variable ::cgtools::softcore_delta
 #  15      term-N
 #  16      term-C
 #  17-19   Empty
-#  20-43   Cb
+#  20-45   Cb
 ##    20   gly Cb
 ##    21   ala Cb
 ##    22   pro Cb
 ##    23   glu Cb
 ##    24   gln Cb
-##    25   asp Cb
+##    25   asp Cb (ASP charged)
 ##    26   asn Cb
 ##    27   ser Cb
 ##    28   his Cb
 ##    29   lys Cb
-##    30   arg Cb
+##    30   arg Cb (ARG charged)
 ##    31   thr Cb
 ##    32   val Cb
 ##    33   ile Cb
@@ -56,6 +56,10 @@ variable ::cgtools::softcore_delta
 ##    39   trp Cb
 ##    40   NAP Cb
 ##    41   CAP Cb
+##    42   ar0 Cb (ARG neutral)
+##    43   as0 Cb (ASP neutral)
+##    44   gl0 Cb (GLU neutral)
+##    45   ly0 Cb (LYS neutral)
 
 set beadtypelist [list \
   { 8  N  14.0 0} \
@@ -91,7 +95,11 @@ set beadtypelist [list \
   {38 CB 121.0 0 CYS} \
   {39 CB 204.0 0 TRP} \
   {40 CB  75.0 0 NAP} \
-  {41 CB  75.0 0 CAP}]
+  {41 CB  75.0 0 CAP} \
+  {42 CB 174.0 0 AR0} \
+  {43 CB 133.0 0 AS0} \
+  {44 CB 147.0 0 GL0} \
+  {45 CB 146.0 0 LY0}]
 ##Notice, bond,angle,dihedral,hydrogen bonds are all set in cgtools/generation/placemol.tcl "proc ::cgtools::generation::place_protein"
 set bondtypelist [list ]
 set angltypelist [list ]
@@ -119,7 +127,11 @@ set partlist_per_res3letter [list \
   {CYS { 8 9 38 11 12}}\
   {TRP { 8 9 39 11 12}}\
   {NAP {15 9 40 11 12}}\
-  {CAP { 8 9 41 16 12}}]
+  {CAP { 8 9 41 16 12}}\
+  {AR0 { 8 9 42 11 12}}\
+  {AS0 { 8 9 43 11 12}}\
+  {GL0 { 8 9 44 11 12}}\
+  {LY0 { 8 9 45 11 12}}]
 
 lappend resparttypelist $beadtypelist
 lappend resparttypelist $bondtypelist
@@ -143,7 +155,8 @@ set charmmbeadlist [list {8 N } {9 CA } {10 N } {11 C } {12 O } \
       {28 CB } {29 CB } {30 CB } {31 CB }\
       {32 CB } {33 CB } {34 CB } {35 CB }\
       {36 CB } {37 CB } {38 CB } {39 CB }\
-      {40 CB } {41 CB }]
+      {40 CB } {41 CB } {42 CB } {43 CB }\
+      {44 CB } {45 CB }]
 lappend respartcharmmbeadlist $charmmbeadlist
 unset charmmbeadlist
 
@@ -222,7 +235,7 @@ lappend bonded_parms [list 120 virtual_bond]
 #  12      O
 #  15      term-N
 #  16      term-C
-#  20-43   Cb
+#  20-45   Cb
 
 require_feature LENNARD_JONES
 require_feature LENNARD_JONES_GENERIC
@@ -443,9 +456,9 @@ proc aa_lipid_inter { aa_num } {
             { "lj" 4.5 4.44 } { "wca" 1.0 4.34 } \
             { "lj" 0.7 3.94 } { "lj" 0.7 3.94 }]
   } 28 { # his
-      return [list { "no" 0.0 0.0 } { "no" 0.0 0.0 } \
-            { "no" 0.0 0.0 } { "no" 0.0 0.0 } \
-            { "no" 0.0 0.0 } { "no" 0.0 0.0 }]
+      return [list { "lj" 1.0 6.23 } { "wca" 1.0 9.28 } \
+            { "lj" 7.5 4.98 } { "wca" 1.0 0.60 } \
+            { "wca" 1.0 4.15 } { "wca" 1.0 7.74 }]
   } 33 { # ile
       return [list { "lj" 1.2 6.61 } { "wca" 1.0 9.92 } \
           { "lj" 5.5 5.91 } { "wca" 1.0 6.73 } \
@@ -498,6 +511,22 @@ proc aa_lipid_inter { aa_num } {
       return [list { "wca" 1.0 4.0 } { "wca" 1.0 4.0 } \
           { "wca" 0.0 4.0 } { "wca" 1.0 4.0 } \
           { "wca" 1.0 4.0 } { "wca" 1.0 4.0 }]
+  } 42 { # AR0 (ARG neutral)
+      return [list { "lj" 1.0 6.66 } { "wca" 1.0 9.32 } \
+          { "lj" 7.5 5.13 } { "wca" 1.0 1.94 } \
+          { "wca" 1.0 4.17 } { "wca" 1.0 11.03 }]
+  } 43 { # AS0 (ASP neutral)
+      return [list { "lj" 1.2 6.18 } { "wca" 1.0 7.42 } \
+          { "lj" 6.5 3.84 } { "wca" 1.0 1.79 } \
+          { "wca" 1.0 2.74 } { "wca" 1.0 4.93 }]
+  } 44 { # GL0 (GLU neutral)
+      return [list { "lj" 1.2 6.41 } { "wca" 1.0 7.69 } \
+            { "lj" 7.5 4.00 } { "wca" 1.0 2.48 } \
+            { "wca" 1.0 4.00 } { "wca" 1.0 9.14 }]
+  } 45 { # LY0 (LYS neutral)
+      return [list { "lj" 1.0 6.63 } { "wca" 1.0 9.02 } \
+          { "lj" 7.5 4.39 } { "no" 0.0 0.00 } \
+          { "wca" 1.0 1.48 } { "wca" 1.0 1.19 }]
   } default {
       ::mmsg::err [namespace current] "No such residue $aa_name defined."
   }
@@ -513,7 +542,7 @@ set lj_cutoff 15.0
 
 # List of peptide beads backbone + side chains
 set listres {8 9 11}
-for { set cb_type 20 } { $cb_type < 42 } { incr cb_type } {
+for { set cb_type 20 } { $cb_type < 46 } { incr cb_type } {
   lappend listres $cb_type
 }
 
